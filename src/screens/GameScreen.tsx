@@ -10,6 +10,7 @@ import {useLevelScore} from '../state/useLevelStore';
 import {goBack} from '../utils/NavigationUtil';
 import {screenWidth} from '../utils/Constants';
 import LottieView from 'lottie-react-native';
+import {useWallet} from '../context/WalletContext';
 
 const GameScreen = () => {
   const route = useRoute();
@@ -24,6 +25,7 @@ const GameScreen = () => {
   const [firstAnimation, setFirstAnimation] = useState<boolean>(false);
 
   const {completedLevel, unlockedLevel} = useLevelScore();
+  const {profileData, updateProfileData} = useWallet();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -44,6 +46,14 @@ const GameScreen = () => {
   }, [time]);
 
   const handleGameOver = () => {
+    // Update wallet profile stats
+    if (profileData) {
+      updateProfileData({
+        gamesPlayed: profileData.gamesPlayed + 1,
+        highScore: Math.max(profileData.highScore, collectedCandies),
+      });
+    }
+
     if (collectedCandies >= totalCount) {
       completedLevel(item?.level?.id, collectedCandies);
       unlockedLevel(item?.level?.id + 1);

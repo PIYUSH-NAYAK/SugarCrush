@@ -2,15 +2,20 @@ import {Image, ImageBackground} from 'react-native';
 import React, {FC, useEffect} from 'react';
 import {commonStyles} from '../styles/commonStyles';
 import {resetAndNavigate} from '../utils/NavigationUtil';
+import {useWallet} from '../context/WalletContext';
 
 const SplashScreen: FC = () => {
+  const {connected} = useWallet();
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      resetAndNavigate('HomeScreen');
+      // Navigate to WelcomeScreen if not connected, HomeScreen if connected
+      resetAndNavigate(connected ? 'HomeScreen' : 'WelcomeScreen');
     }, 2500);
 
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [connected]);
+
   return (
     <ImageBackground
       source={require('../assets/images/bg.png')}

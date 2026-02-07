@@ -1,5 +1,5 @@
 import {View, Text, ImageBackground, Image, FlatList} from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {levelStyles} from '../styles/levelStyles';
 import {commonStyles} from '../styles/commonStyles';
@@ -8,11 +8,13 @@ import {goBack, navigate} from '../utils/NavigationUtil';
 import {useLevelScore} from '../state/useLevelStore';
 import {gameLevels} from '../utils/data';
 import {useSound} from '../navigation/SoundContext';
+import ProfileAvatar from '../components/ui/ProfileAvatar';
+import ProfileMenu from '../components/ui/ProfileMenu';
 
 const LevelScreen = () => {
   const {levels} = useLevelScore();
   const {stopSound, playSound} = useSound();
-
+  const [menuVisible, setMenuVisible] = useState(false);
   const [vol, setVol] = React.useState(true);
 
   // const toggleVolume = () => {
@@ -99,6 +101,11 @@ const LevelScreen = () => {
           )}
         </View>
 
+        {/* Profile Avatar in top-right */}
+        <View style={levelStyles.profileContainer}>
+          <ProfileAvatar onPress={() => setMenuVisible(true)} size={50} />
+        </View>
+
         <ImageBackground
           source={require('../assets/images/lines.jpg')}
           style={levelStyles.levelContainer}>
@@ -131,6 +138,9 @@ const LevelScreen = () => {
           </Text>
         </View>
       </View>
+
+      {/* Profile Menu Modal - moved outside to render at root level */}
+      <ProfileMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </ImageBackground>
   );
 };

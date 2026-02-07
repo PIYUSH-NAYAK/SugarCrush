@@ -1,8 +1,10 @@
 import {View, StyleSheet, Image, ImageBackground, Text} from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {FONTS, formatTime, screenHeight} from '../../utils/Constants';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {RFValue} from 'react-native-responsive-fontsize';
+import ProfileAvatar from '../ui/ProfileAvatar';
+import ProfileMenu from '../ui/ProfileMenu';
 
 interface GameHeaderProps {
   totalCount: number;
@@ -11,6 +13,8 @@ interface GameHeaderProps {
 }
 
 const GameHeader = ({totalCount, collectedCandies, time}: GameHeaderProps) => {
+  const [menuVisible, setMenuVisible] = useState(false);
+
   return (
     <View style={styles.container}>
       <SafeAreaView />
@@ -34,6 +38,14 @@ const GameHeader = ({totalCount, collectedCandies, time}: GameHeaderProps) => {
           </View>
         </View>
       </ImageBackground>
+
+      {/* Profile Avatar in top-right */}
+      <View style={styles.profileContainer}>
+        <ProfileAvatar onPress={() => setMenuVisible(true)} size={45} />
+      </View>
+
+      {/* Profile Menu Modal */}
+      <ProfileMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </View>
   );
 };
@@ -104,6 +116,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Lily,
     fontSize: RFValue(14),
     color: '#5B2333',
+  },
+  profileContainer: {
+    position: 'absolute',
+    top: RFValue(50),
+    right: RFValue(15),
+    zIndex: 10,
   },
 });
 

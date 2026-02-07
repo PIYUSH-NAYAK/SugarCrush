@@ -24,3 +24,10 @@ export const mmkvStorage = {
     storage.delete(key);
   },
 };
+
+// Storage keys
+export const STORAGE_KEYS = {
+  WALLET_ADDRESS: 'wallet_address',
+  CUSTOM_AVATAR_URI: 'custom_avatar_uri',
+  PLAYER_PROFILE: 'player_profile',
+};

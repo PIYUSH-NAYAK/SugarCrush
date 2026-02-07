@@ -6,11 +6,7 @@ import {FONTS} from '../../utils/Constants';
 const Footer = () => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => Linking.openURL('https://www.twinklestargames.com')}>
-        <Text style={styles.text}>Made with 💖</Text>
-        <Text style={styles.text2}>by - John Edet</Text>
-      </TouchableOpacity>
+      {/* Attribution removed */}
     </View>
   );
 };

@@ -1,5 +1,5 @@
 /* eslint-disable react/self-closing-comp */
-import {Image, ImageBackground, StyleSheet} from 'react-native';
+import {Image, ImageBackground, StyleSheet, View} from 'react-native';
 import React, {FC, useEffect} from 'react';
 import {commonStyles} from '../styles/commonStyles';
 import {useIsFocused} from '@react-navigation/native';
@@ -38,31 +38,34 @@ const HomeScreen: FC = () => {
   }));
 
   return (
-    <ImageBackground
-      source={require('../assets/images/b2.png')}
-      style={commonStyles.container}>
-      <Animated.Image
-        source={require('../assets/images/banner.png')}
-        style={[styles.img, animatedStyles]}
-      />
-      <LottieView
-        source={require('../assets/animations/bird.json')}
-        speed={1}
-        autoPlay
-        loop
-        hardwareAccelerationAndroid
-        style={styles.lottieView}
-      />
-      <ScalePress
-        style={styles.playButtonContainer}
-        onPress={() => navigate('LevelScreen')}>
-        <Image
-          source={require('../assets/icons/play.png')}
-          style={styles.playButton}
+    <>
+      <ImageBackground
+        source={require('../assets/images/b2.png')}
+        style={commonStyles.container}>
+        <Animated.Image
+          source={require('../assets/images/banner.png')}
+          style={[styles.img, animatedStyles]}
         />
-      </ScalePress>
-      <Footer />
-    </ImageBackground>
+        <LottieView
+          source={require('../assets/animations/bird.json')}
+          speed={1}
+          autoPlay
+          loop
+          hardwareAccelerationAndroid
+          style={styles.lottieView}
+        />
+        <ScalePress
+          style={styles.playButtonContainer}
+          onPress={() => navigate('LevelScreen')}>
+          <Image
+            source={require('../assets/icons/play.png')}
+            style={styles.playButton}
+          />
+        </ScalePress>
+        
+        <Footer />
+      </ImageBackground>
+    </>
   );
 };
 
@@ -93,3 +96,4 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+

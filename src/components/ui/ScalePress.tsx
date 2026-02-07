@@ -7,9 +7,15 @@ interface ScalePressProp {
   onPress?: () => void;
   children: React.ReactNode;
   style?: ViewStyle;
+  disabled?: boolean;
 }
 
-const ScalePress: React.FC<ScalePressProp> = ({onPress, children, style}) => {
+const ScalePress: React.FC<ScalePressProp> = ({
+  onPress,
+  children,
+  style,
+  disabled,
+}) => {
   const {playSound} = useSound();
 
   const scaleValue = new Animated.Value(1);
@@ -35,6 +41,7 @@ const ScalePress: React.FC<ScalePressProp> = ({onPress, children, style}) => {
       onPress={onPress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
+      disabled={disabled}
       style={{...style}}>
       <Animated.View
         style={[{transform: [{scale: scaleValue}], width: '100%'}]}>

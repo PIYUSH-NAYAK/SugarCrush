@@ -95,4 +95,10 @@ export const levelStyles = StyleSheet.create({
     opacity: 0.5,
     textAlign: 'center',
   },
+  profileContainer: {
+    position: 'absolute',
+    top: RFValue(10),
+    right: RFValue(15),
+    zIndex: 10,
+  },
 });

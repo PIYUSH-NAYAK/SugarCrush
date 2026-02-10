@@ -14,7 +14,7 @@ use mpl_token_metadata::types::DataV2;
 use session_keys::{session_auth_or, Session, SessionError, SessionToken};
 
 
-declare_id!("HEPEoHjEb2tJRgzHdWNUmqpojX11nYTJWAhx3QBxVhiY");
+declare_id!("6DKEYNYdiTB77U36Gnkp5kGYqJPmeUTyqJuavhejrF6t");
 
 // ========================================
 // Level Configuration (On-chain Constants)

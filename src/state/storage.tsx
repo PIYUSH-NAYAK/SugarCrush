@@ -30,4 +30,7 @@ export const STORAGE_KEYS = {
   WALLET_ADDRESS: 'wallet_address',
   CUSTOM_AVATAR_URI: 'custom_avatar_uri',
   PLAYER_PROFILE: 'player_profile',
+  SESSION_KEY: 'session_key',
+  SESSION_EXPIRY: 'session_expiry',
+  DELEGATION_STATUS: 'delegation_status',
 };

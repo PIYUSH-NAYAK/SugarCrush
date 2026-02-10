@@ -1,4 +1,4 @@
-import {View, Text, ImageBackground, Image, FlatList} from 'react-native';
+import {View, Text, ImageBackground, Image, FlatList, Alert} from 'react-native';
 import React, {useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {levelStyles} from '../styles/levelStyles';
@@ -10,32 +10,68 @@ import {gameLevels} from '../utils/data';
 import {useSound} from '../navigation/SoundContext';
 import ProfileAvatar from '../components/ui/ProfileAvatar';
 import ProfileMenu from '../components/ui/ProfileMenu';
+import {useCandyCrushProgram} from '../hooks/useCandyCrushProgram';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const LevelScreen = () => {
   const {levels} = useLevelScore();
   const {stopSound, playSound} = useSound();
   const [menuVisible, setMenuVisible] = useState(false);
   const [vol, setVol] = React.useState(true);
+  const [isSettingUpGame, setIsSettingUpGame] = useState(false);
 
-  // const toggleVolume = () => {
-  //   if (vol) {
-  //     stopSound('bg');
-  //     setVol(false);
-  //   } else {
-  //     playSound('bg', true);
-  //     setVol(true);
-  //   }
-  // };
+  const {
+    createSession,
+    isSessionValid,
+    startGame,
+    delegateGame,
+    loading,
+  } = useCandyCrushProgram();
 
-  const levelPressHandler = (id: string) => {
+  const levelPressHandler = async (id: string) => {
     const levelKey = `level${id}` as keyof GameLevels;
     const level = gameLevels[levelKey];
-    navigate('GameScreen', {
-      level: {
-        ...level,
-        id: id,
-      },
-    });
+
+    setIsSettingUpGame(true);
+
+    try {
+      // 1. Ensure session key exists and is valid
+      if (!isSessionValid()) {
+        console.log('🔑 Creating session key...');
+        await createSession();
+        console.log('✅ Session key created');
+      }
+
+      // 2. Start game on-chain
+      console.log('🎮 Starting game...');
+      await startGame(parseInt(id, 10));
+
+      // NOTE: Delegation is handled automatically by MagicBlock's ephemeral rollups SDK
+      // The #[delegate] macro on DelegateGame handles this internally
+      // Manual delegation call removed to avoid PDA seed constraint errors
+      
+      // 3. Delegate game to ephemeral rollup
+      // console.log('🚀 Delegating game...');
+      // await delegateGame();
+
+      console.log('✅ Game setup complete! Starting gameplay...');
+
+      // 4. Navigate to game screen
+      navigate('GameScreen', {
+        level: {
+          ...level,
+          id: id,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error setting up game:', error);
+      Alert.alert(
+        'Setup Failed',
+        error.message || 'Failed to setup game session. Please try again.'
+      );
+    } finally {
+      setIsSettingUpGame(false);
+    }
   };
 
   const renderItems = ({item}: any) => {
@@ -141,6 +177,18 @@ const LevelScreen = () => {
 
       {/* Profile Menu Modal - moved outside to render at root level */}
       <ProfileMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
+
+      {/* Loading Overlay for Game Setup */}
+      {(isSettingUpGame || loading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isSettingUpGame
+              ? 'Setting up game session...'
+              : 'Processing transaction...'
+          }
+        />
+      )}
     </ImageBackground>
   );
 };

@@ -1,14 +1,20 @@
-{
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/candy_crush.json`.
+ */
+export type CandyCrush = {
   "address": "6DKEYNYdiTB77U36Gnkp5kGYqJPmeUTyqJuavhejrF6t",
   "metadata": {
-    "name": "candy_crush",
+    "name": "candyCrush",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
   "instructions": [
     {
-      "name": "commit_game",
+      "name": "commitGame",
       "docs": [
         "Commit game session state"
       ],
@@ -29,7 +35,7 @@
           "signer": true
         },
         {
-          "name": "game_session",
+          "name": "gameSession",
           "writable": true,
           "pda": {
             "seeds": [
@@ -58,11 +64,11 @@
           }
         },
         {
-          "name": "magic_program",
+          "name": "magicProgram",
           "address": "Magic11111111111111111111111111111111111111"
         },
         {
-          "name": "magic_context",
+          "name": "magicContext",
           "writable": true,
           "address": "MagicContext1111111111111111111111111111111"
         }
@@ -70,7 +76,7 @@
       "args": []
     },
     {
-      "name": "delegate_game",
+      "name": "delegateGame",
       "docs": [
         "Delegate the game session to ephemeral rollup"
       ],
@@ -90,7 +96,7 @@
           "signer": true
         },
         {
-          "name": "buffer_pda",
+          "name": "bufferPda",
           "writable": true,
           "pda": {
             "seeds": [
@@ -150,7 +156,7 @@
           }
         },
         {
-          "name": "delegation_record_pda",
+          "name": "delegationRecordPda",
           "writable": true,
           "pda": {
             "seeds": [
@@ -176,12 +182,12 @@
             ],
             "program": {
               "kind": "account",
-              "path": "delegation_program"
+              "path": "delegationProgram"
             }
           }
         },
         {
-          "name": "delegation_metadata_pda",
+          "name": "delegationMetadataPda",
           "writable": true,
           "pda": {
             "seeds": [
@@ -216,7 +222,7 @@
             ],
             "program": {
               "kind": "account",
-              "path": "delegation_program"
+              "path": "delegationProgram"
             }
           }
         },
@@ -250,22 +256,22 @@
           }
         },
         {
-          "name": "owner_program",
+          "name": "ownerProgram",
           "address": "6DKEYNYdiTB77U36Gnkp5kGYqJPmeUTyqJuavhejrF6t"
         },
         {
-          "name": "delegation_program",
+          "name": "delegationProgram",
           "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "end_game",
+      "name": "endGame",
       "docs": [
         "End game, commit results, and mint victory NFT if won"
       ],
@@ -281,7 +287,7 @@
       ],
       "accounts": [
         {
-          "name": "game_session",
+          "name": "gameSession",
           "writable": true,
           "pda": {
             "seeds": [
@@ -310,7 +316,7 @@
           }
         },
         {
-          "name": "player_profile",
+          "name": "playerProfile",
           "writable": true,
           "pda": {
             "seeds": [
@@ -348,13 +354,13 @@
       ],
       "args": [
         {
-          "name": "final_score",
+          "name": "finalScore",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "initialize_collection",
+      "name": "initializeCollection",
       "docs": [
         "Initialize the Victory NFT Collection (admin only) - Placeholder"
       ],
@@ -370,7 +376,7 @@
       ],
       "accounts": [
         {
-          "name": "victory_collection",
+          "name": "victoryCollection",
           "writable": true,
           "pda": {
             "seeds": [
@@ -406,7 +412,7 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
         {
@@ -417,7 +423,7 @@
       "args": []
     },
     {
-      "name": "initialize_player",
+      "name": "initializePlayer",
       "docs": [
         "Initialize a player profile"
       ],
@@ -433,7 +439,7 @@
       ],
       "accounts": [
         {
-          "name": "player_profile",
+          "name": "playerProfile",
           "writable": true,
           "pda": {
             "seeds": [
@@ -469,14 +475,14 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "make_move",
+      "name": "makeMove",
       "docs": [
         "Make a move (swap two candies) - executed in ephemeral rollup"
       ],
@@ -492,7 +498,7 @@
       ],
       "accounts": [
         {
-          "name": "game_session",
+          "name": "gameSession",
           "writable": true,
           "pda": {
             "seeds": [
@@ -516,7 +522,7 @@
               {
                 "kind": "account",
                 "path": "game_session.player",
-                "account": "GameSession"
+                "account": "gameSession"
               }
             ]
           }
@@ -527,31 +533,31 @@
           "signer": true
         },
         {
-          "name": "session_token",
+          "name": "sessionToken",
           "optional": true
         }
       ],
       "args": [
         {
-          "name": "from_row",
+          "name": "fromRow",
           "type": "u8"
         },
         {
-          "name": "from_col",
+          "name": "fromCol",
           "type": "u8"
         },
         {
-          "name": "to_row",
+          "name": "toRow",
           "type": "u8"
         },
         {
-          "name": "to_col",
+          "name": "toCol",
           "type": "u8"
         }
       ]
     },
     {
-      "name": "mint_victory_nft",
+      "name": "mintVictoryNft",
       "docs": [
         "Mint victory NFT"
       ],
@@ -567,7 +573,7 @@
       ],
       "accounts": [
         {
-          "name": "game_session",
+          "name": "gameSession",
           "pda": {
             "seeds": [
               {
@@ -595,7 +601,7 @@
           }
         },
         {
-          "name": "player_profile",
+          "name": "playerProfile",
           "writable": true,
           "pda": {
             "seeds": [
@@ -626,7 +632,7 @@
           }
         },
         {
-          "name": "victory_collection",
+          "name": "victoryCollection",
           "writable": true,
           "pda": {
             "seeds": [
@@ -662,7 +668,7 @@
           "signer": true
         },
         {
-          "name": "token_account",
+          "name": "tokenAccount",
           "writable": true,
           "pda": {
             "seeds": [
@@ -756,7 +762,7 @@
           "writable": true
         },
         {
-          "name": "master_edition",
+          "name": "masterEdition",
           "writable": true
         },
         {
@@ -765,19 +771,19 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "associated_token_program",
+          "name": "associatedTokenProgram",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "token_metadata_program",
+          "name": "tokenMetadataProgram",
           "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         },
         {
@@ -788,7 +794,7 @@
       "args": []
     },
     {
-      "name": "process_undelegation",
+      "name": "processUndelegation",
       "discriminator": [
         196,
         28,
@@ -801,7 +807,7 @@
       ],
       "accounts": [
         {
-          "name": "base_account",
+          "name": "baseAccount",
           "writable": true
         },
         {
@@ -812,12 +818,12 @@
           "writable": true
         },
         {
-          "name": "system_program"
+          "name": "systemProgram"
         }
       ],
       "args": [
         {
-          "name": "account_seeds",
+          "name": "accountSeeds",
           "type": {
             "vec": "bytes"
           }
@@ -825,7 +831,7 @@
       ]
     },
     {
-      "name": "start_game",
+      "name": "startGame",
       "docs": [
         "Start a new game session and delegate to ephemeral rollup"
       ],
@@ -841,7 +847,7 @@
       ],
       "accounts": [
         {
-          "name": "game_session",
+          "name": "gameSession",
           "writable": true,
           "pda": {
             "seeds": [
@@ -870,7 +876,7 @@
           }
         },
         {
-          "name": "player_profile",
+          "name": "playerProfile",
           "pda": {
             "seeds": [
               {
@@ -905,7 +911,7 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -917,7 +923,7 @@
       ]
     },
     {
-      "name": "undelegate_game",
+      "name": "undelegateGame",
       "docs": [
         "Undelegate game session from rollup"
       ],
@@ -938,7 +944,7 @@
           "signer": true
         },
         {
-          "name": "game_session",
+          "name": "gameSession",
           "writable": true,
           "pda": {
             "seeds": [
@@ -967,11 +973,11 @@
           }
         },
         {
-          "name": "magic_program",
+          "name": "magicProgram",
           "address": "Magic11111111111111111111111111111111111111"
         },
         {
-          "name": "magic_context",
+          "name": "magicContext",
           "writable": true,
           "address": "MagicContext1111111111111111111111111111111"
         }
@@ -981,7 +987,7 @@
   ],
   "accounts": [
     {
-      "name": "GameSession",
+      "name": "gameSession",
       "discriminator": [
         150,
         116,
@@ -994,7 +1000,7 @@
       ]
     },
     {
-      "name": "PlayerProfile",
+      "name": "playerProfile",
       "discriminator": [
         82,
         226,
@@ -1007,7 +1013,7 @@
       ]
     },
     {
-      "name": "SessionToken",
+      "name": "sessionToken",
       "discriminator": [
         233,
         4,
@@ -1020,7 +1026,7 @@
       ]
     },
     {
-      "name": "VictoryCollection",
+      "name": "victoryCollection",
       "discriminator": [
         202,
         192,
@@ -1036,48 +1042,48 @@
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidLevel",
+      "name": "invalidLevel",
       "msg": "Invalid level number"
     },
     {
       "code": 6001,
-      "name": "LevelLocked",
+      "name": "levelLocked",
       "msg": "Level is locked"
     },
     {
       "code": 6002,
-      "name": "GameNotActive",
+      "name": "gameNotActive",
       "msg": "Game session is not active"
     },
     {
       "code": 6003,
-      "name": "InvalidPosition",
+      "name": "invalidPosition",
       "msg": "Invalid grid position"
     },
     {
       "code": 6004,
-      "name": "NotAdjacent",
+      "name": "notAdjacent",
       "msg": "Candies are not adjacent"
     },
     {
       "code": 6005,
-      "name": "InvalidAuth",
+      "name": "invalidAuth",
       "msg": "Invalid authentication"
     },
     {
       "code": 6006,
-      "name": "GameStillActive",
+      "name": "gameStillActive",
       "msg": "Game is still active"
     },
     {
       "code": 6007,
-      "name": "InsufficientScore",
+      "name": "insufficientScore",
       "msg": "Insufficient score to mint NFT"
     }
   ],
   "types": [
     {
-      "name": "GameSession",
+      "name": "gameSession",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1108,22 +1114,22 @@
             "type": "u64"
           },
           {
-            "name": "moves_made",
+            "name": "movesMade",
             "type": "u32"
           },
           {
-            "name": "start_time",
+            "name": "startTime",
             "type": "i64"
           },
           {
-            "name": "is_active",
+            "name": "isActive",
             "type": "bool"
           }
         ]
       }
     },
     {
-      "name": "PlayerProfile",
+      "name": "playerProfile",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1132,38 +1138,38 @@
             "type": "pubkey"
           },
           {
-            "name": "total_games",
+            "name": "totalGames",
             "type": "u64"
           },
           {
-            "name": "total_wins",
+            "name": "totalWins",
             "type": "u64"
           },
           {
-            "name": "highest_level",
+            "name": "highestLevel",
             "type": "u8"
           },
           {
-            "name": "unlocked_levels",
+            "name": "unlockedLevels",
             "type": "u64"
           },
           {
-            "name": "total_candies_collected",
+            "name": "totalCandiesCollected",
             "type": "u64"
           },
           {
-            "name": "total_nfts_minted",
+            "name": "totalNftsMinted",
             "type": "u64"
           },
           {
-            "name": "created_at",
+            "name": "createdAt",
             "type": "i64"
           }
         ]
       }
     },
     {
-      "name": "SessionToken",
+      "name": "sessionToken",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1172,22 +1178,22 @@
             "type": "pubkey"
           },
           {
-            "name": "target_program",
+            "name": "targetProgram",
             "type": "pubkey"
           },
           {
-            "name": "session_signer",
+            "name": "sessionSigner",
             "type": "pubkey"
           },
           {
-            "name": "valid_until",
+            "name": "validUntil",
             "type": "i64"
           }
         ]
       }
     },
     {
-      "name": "VictoryCollection",
+      "name": "victoryCollection",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1196,11 +1202,11 @@
             "type": "pubkey"
           },
           {
-            "name": "total_victories",
+            "name": "totalVictories",
             "type": "u64"
           }
         ]
       }
     }
   ]
-}
+};

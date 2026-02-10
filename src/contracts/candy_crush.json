@@ -1,5 +1,5 @@
 {
-  "address": "HEPEoHjEb2tJRgzHdWNUmqpojX11nYTJWAhx3QBxVhiY",
+  "address": "6DKEYNYdiTB77U36Gnkp5kGYqJPmeUTyqJuavhejrF6t",
   "metadata": {
     "name": "candy_crush",
     "version": "0.1.0",
@@ -113,38 +113,38 @@
             "program": {
               "kind": "const",
               "value": [
-                241,
-                40,
-                175,
-                145,
                 77,
-                116,
-                73,
-                149,
-                226,
-                188,
-                60,
-                249,
-                1,
-                87,
-                116,
-                192,
-                210,
-                81,
-                90,
-                232,
-                216,
-                31,
-                201,
-                77,
-                167,
-                118,
-                233,
-                74,
+                114,
+                5,
+                95,
+                47,
+                82,
+                134,
+                52,
+                137,
+                86,
+                82,
+                187,
+                171,
+                127,
+                215,
+                15,
+                130,
+                237,
+                63,
+                194,
+                237,
                 153,
-                138,
-                1,
-                217
+                229,
+                147,
+                116,
+                76,
+                248,
+                157,
+                160,
+                158,
+                243,
+                53
               ]
             }
           }
@@ -251,7 +251,7 @@
         },
         {
           "name": "owner_program",
-          "address": "HEPEoHjEb2tJRgzHdWNUmqpojX11nYTJWAhx3QBxVhiY"
+          "address": "6DKEYNYdiTB77U36Gnkp5kGYqJPmeUTyqJuavhejrF6t"
         },
         {
           "name": "delegation_program",
@@ -553,7 +553,7 @@
     {
       "name": "mint_victory_nft",
       "docs": [
-        "Mint victory NFT - Placeholder for future implementation"
+        "Mint victory NFT"
       ],
       "discriminator": [
         19,
@@ -657,6 +657,109 @@
           }
         },
         {
+          "name": "mint",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "master_edition",
+          "writable": true
+        },
+        {
           "name": "authority",
           "writable": true,
           "signer": true
@@ -664,6 +767,22 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": []

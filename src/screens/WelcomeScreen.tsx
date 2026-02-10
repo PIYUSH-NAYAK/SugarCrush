@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,14 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import {commonStyles} from '../styles/commonStyles';
 import {screenHeight, screenWidth, FONTS} from '../utils/Constants';
 import {RFValue} from 'react-native-responsive-fontsize';
 import LottieView from 'lottie-react-native';
 import {useWallet} from '../context/WalletContext';
+import {useCandyCrushProgram} from '../hooks/useCandyCrushProgram';
 import ScalePress from '../components/ui/ScalePress';
 import Animated, {
   useAnimatedStyle,
@@ -26,15 +28,57 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const WelcomeScreen = () => {
   const {connect, connecting, connected} = useWallet();
+  const {initializePlayer, fetchPlayerProfile, playerProfile, loading} =
+    useCandyCrushProgram();
+  const [checkingProfile, setCheckingProfile] = useState(false);
+  const [needsInitialization, setNeedsInitialization] = useState(false);
+
   const translateY = useSharedValue(-200);
   const scale = useSharedValue(1);
 
-  // Navigate to HomeScreen when wallet is connected
+  // Check player profile when wallet is connected
   useEffect(() => {
     if (connected) {
-      resetAndNavigate('HomeScreen');
+      checkPlayerProfile();
     }
   }, [connected]);
+
+  const checkPlayerProfile = async () => {
+    setCheckingProfile(true);
+    try {
+      const profile = await fetchPlayerProfile();
+      if (profile) {
+        // Profile exists, navigate to home
+        resetAndNavigate('HomeScreen');
+      } else {
+        // Profile doesn't exist, show initialization button
+        setNeedsInitialization(true);
+      }
+    } catch (error) {
+      console.error('Error checking profile:', error);
+      setNeedsInitialization(true);
+    } finally {
+      setCheckingProfile(false);
+    }
+  };
+
+  const handleInitializePlayer = async () => {
+    try {
+      await initializePlayer();
+      Alert.alert(
+        'Success!',
+        'Your player profile has been created on-chain!',
+        [
+          {
+            text: 'Start Playing',
+            onPress: () => resetAndNavigate('HomeScreen'),
+          },
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to initialize player profile');
+    }
+  };
 
   useEffect(() => {
     translateY.value = withTiming(0, {
@@ -88,21 +132,37 @@ const WelcomeScreen = () => {
         </Text>
       </View>
 
-      {/* Connect Wallet Button */}
-      <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
-        <ScalePress
-          onPress={connect}
-          disabled={connecting}
-          style={styles.connectButton}>
-          <Image
-            source={require('../assets/icons/wallet.png')}
-            style={styles.walletIcon}
-          />
-          <Text style={styles.buttonText}>
-            {connecting ? 'Connecting...' : 'Connect Wallet'}
+      {/* Connect Wallet Button or Initialize Player Button */}
+      {!connected ? (
+        <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
+          <ScalePress
+            onPress={connect}
+            disabled={connecting}
+            style={styles.connectButton}>
+            <Image
+              source={require('../assets/icons/wallet.png')}
+              style={styles.walletIcon}
+            />
+            <Text style={styles.buttonText}>
+              {connecting ? 'Connecting...' : 'Connect Wallet'}
+            </Text>
+          </ScalePress>
+        </Animated.View>
+      ) : needsInitialization ? (
+        <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
+          <ScalePress
+            onPress={handleInitializePlayer}
+            disabled={loading}
+            style={[styles.connectButton, styles.initButton]}>
+            <Text style={styles.buttonText}>
+              {loading ? 'Creating Profile...' : '✨ Create Player Profile'}
+            </Text>
+          </ScalePress>
+          <Text style={styles.initHint}>
+            Create your on-chain profile to start playing!
           </Text>
-        </ScalePress>
-      </Animated.View>
+        </Animated.View>
+      ) : null}
 
       {/* Decorative elements */}
       <View style={styles.decorativeContainer}>
@@ -110,10 +170,16 @@ const WelcomeScreen = () => {
       </View>
 
       {/* Loading Overlay */}
-      {connecting && (
-        <LoadingSpinner 
-          overlay 
-          message="Connecting to Solflare Wallet..." 
+      {(connecting || checkingProfile || loading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            connecting
+              ? 'Connecting to Solflare Wallet...'
+              : checkingProfile
+              ? 'Checking player profile...'
+              : 'Creating player profile...'
+          }
         />
       )}
     </ImageBackground>
@@ -215,6 +281,16 @@ const styles = StyleSheet.create({
     textShadowColor: '#FFF',
     textShadowOffset: {width: 1, height: 1},
     textShadowRadius: 2,
+  },
+  initButton: {
+    backgroundColor: '#FF1493',
+  },
+  initHint: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(12),
+    color: '#9C27B0',
+    marginTop: RFValue(10),
+    textAlign: 'center',
   },
 });
 

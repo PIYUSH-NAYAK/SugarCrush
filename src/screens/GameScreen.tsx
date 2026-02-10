@@ -11,6 +11,8 @@ import {goBack} from '../utils/NavigationUtil';
 import {screenWidth} from '../utils/Constants';
 import LottieView from 'lottie-react-native';
 import {useWallet} from '../context/WalletContext';
+import {useCandyCrushProgram} from '../hooks/useCandyCrushProgram';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const GameScreen = () => {
   const route = useRoute();
@@ -23,9 +25,11 @@ const GameScreen = () => {
 
   const [showAnimation, setShowAnimation] = useState<boolean>(false);
   const [firstAnimation, setFirstAnimation] = useState<boolean>(false);
+  const [isEndingGame, setIsEndingGame] = useState<boolean>(false);
 
   const {completedLevel, unlockedLevel} = useLevelScore();
   const {profileData, updateProfileData} = useWallet();
+  const {endGame, mintVictoryNft, loading} = useCandyCrushProgram();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -45,31 +49,70 @@ const GameScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [time]);
 
-  const handleGameOver = () => {
-    // Update wallet profile stats
-    if (profileData) {
-      updateProfileData({
-        gamesPlayed: profileData.gamesPlayed + 1,
-        highScore: Math.max(profileData.highScore, collectedCandies),
-      });
-    }
+  const handleGameOver = async () => {
+    if (isEndingGame) return; // Prevent multiple calls
+    setIsEndingGame(true);
 
-    if (collectedCandies >= totalCount) {
-      completedLevel(item?.level?.id, collectedCandies);
-      unlockedLevel(item?.level?.id + 1);
-      Alert.alert('Congratulations!', 'You have completed the level!', [
-        {
-          text: 'Next Level',
-          onPress: () => goBack(),
-        },
-      ]);
-    } else {
-      Alert.alert('Game Over!', 'You did not collect enough candies!', [
-        {
-          text: "phew!, I'll win next time",
-          onPress: () => goBack(),
-        },
-      ]);
+    try {
+      const isVictory = collectedCandies >= totalCount;
+      const finalScore = collectedCandies;
+
+      console.log(`🏁 Game Over! Victory: ${isVictory}, Score: ${finalScore}`);
+
+      // Update local profile stats
+      if (profileData) {
+        updateProfileData({
+          gamesPlayed: profileData.gamesPlayed + 1,
+          highScore: Math.max(profileData.highScore, finalScore),
+        });
+      }
+
+      // End game on-chain
+      await endGame(finalScore);
+
+      if (isVictory) {
+        // Victory flow: end game + mint NFT
+        try {
+          await mintVictoryNft();
+          completedLevel(item?.level?.id, finalScore);
+          unlockedLevel(item?.level?.id + 1);
+
+          Alert.alert(
+            '🎉 Congratulations! 🎉',
+            'You won! Your Victory NFT has been minted!',
+            [
+              {
+                text: 'Next Level',
+                onPress: () => goBack(),
+              },
+            ]
+          );
+        } catch (nftError) {
+          console.error('Error minting victory NFT:', nftError);
+          Alert.alert(
+            'Victory!',
+            'You won, but there was an issue minting your NFT. Please try again later.',
+            [{text: 'OK', onPress: () => goBack()}]
+          );
+        }
+      } else {
+        // Loss flow
+        Alert.alert('Game Over!', 'You did not collect enough candies!', [
+          {
+            text: "phew!, I'll win next time",
+            onPress: () => goBack(),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error ending game:', error);
+      Alert.alert(
+        'Error',
+        'There was an issue ending the game. Please try again.',
+        [{text: 'OK', onPress: () => goBack()}]
+      );
+    } finally {
+      setIsEndingGame(false);
     }
   };
 
@@ -172,6 +215,18 @@ const GameScreen = () => {
         </>
       )}
       <GameFooter />
+
+      {/* Loading Overlay for Game End / NFT Minting */}
+      {(isEndingGame || loading) && (
+        <LoadingSpinner
+          overlay
+          message={
+            isEndingGame
+              ? 'Ending game and minting NFT...'
+              : 'Processing transaction...'
+          }
+        />
+      )}
     </ImageBackground>
   );
 };

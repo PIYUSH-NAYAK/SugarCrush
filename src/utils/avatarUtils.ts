@@ -17,6 +17,29 @@ export const generateAvatarFromAddress = (walletAddress: string): string => {
 };
 
 /**
+ * Derives a consistent accent color theme from a wallet address.
+ * Returns an object with accent, light, and muted variants.
+ */
+export const getThemeFromAddress = (walletAddress: string) => {
+    // Generate a hue from the wallet address hash
+    let hash = 0;
+    for (let i = 0; i < walletAddress.length; i++) {
+        hash = walletAddress.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+
+    return {
+        accent: `hsl(${hue}, 65%, 55%)`,        // vibrant accent
+        accentLight: `hsl(${hue}, 60%, 80%)`,    // soft light tint
+        accentMuted: `hsl(${hue}, 50%, 40%)`,    // deeper muted
+        accentBg: `hsla(${hue}, 65%, 55%, 0.12)`, // subtle background
+        accentBorder: `hsla(${hue}, 65%, 55%, 0.25)`, // subtle border
+        accentGlow: `hsla(${hue}, 65%, 55%, 0.4)`,  // glow/shadow
+        accentText: `hsla(${hue}, 50%, 75%, 0.7)`,  // muted text
+    };
+};
+
+/**
  * Truncates a wallet address for display
  * @param address - Full wallet address
  * @param startChars - Number of characters to show at start (default: 4)

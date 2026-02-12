@@ -13,13 +13,14 @@ import {
 } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import {WalletState, ProfileData} from '../types/walletTypes';
 import {mmkvStorage, STORAGE_KEYS} from '../state/storage';
-import {initializeProgram, initializePlayer} from '../services/solanaService';
+import {initializeProgram, initializePlayer, getPlayerProfile} from '../services/solanaService';
 
 interface WalletContextType extends WalletState {
   connect: () => Promise<void>;
   disconnect: () => void;
   profileData: ProfileData | null;
   updateProfileData: (data: Partial<ProfileData>) => void;
+  fetchPlayerProfile: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
@@ -201,6 +202,35 @@ export const WalletProvider = ({children}: {children: ReactNode}) => {
     );
   };
 
+  const fetchPlayerProfile = async () => {
+    if (!publicKey) return;
+
+    try {
+      const pubKey = new PublicKey(publicKey);
+      const program = await initializeProgram(pubKey);
+      const playerProfile = await getPlayerProfile(program, pubKey);
+
+      if (playerProfile) {
+        const updatedProfile: ProfileData = {
+          walletAddress: publicKey,
+          gamesPlayed: playerProfile.totalWins,
+          highScore: playerProfile.levels.reduce((max, level) => Math.max(max, level.highScore), 0),
+          totalTokensEarned: playerProfile.totalTokensEarned,
+          customAvatarUri: profileData?.customAvatarUri,
+          username: profileData?.username,
+        };
+
+        setProfileData(updatedProfile);
+        mmkvStorage.setItem(
+          STORAGE_KEYS.PLAYER_PROFILE,
+          JSON.stringify(updatedProfile),
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching player profile:', error);
+    }
+  };
+
   return (
     <WalletContext.Provider
       value={{
@@ -211,6 +241,7 @@ export const WalletProvider = ({children}: {children: ReactNode}) => {
         disconnect,
         profileData,
         updateProfileData,
+        fetchPlayerProfile,
       }}>
       {children}
     </WalletContext.Provider>

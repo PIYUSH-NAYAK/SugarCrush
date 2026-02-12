@@ -1,5 +1,5 @@
 {
-  "address": "6DKEYNYdiTB77U36Gnkp5kGYqJPmeUTyqJuavhejrF6t",
+  "address": "BjcZsUV8h5A9GxgJuCUem28mWX7vLEfoqEWK113dhfsj",
   "metadata": {
     "name": "candy_crush",
     "version": "0.1.0",
@@ -8,266 +8,9 @@
   },
   "instructions": [
     {
-      "name": "commit_game",
-      "docs": [
-        "Commit game session state"
-      ],
-      "discriminator": [
-        212,
-        148,
-        56,
-        92,
-        60,
-        28,
-        179,
-        66
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "game_session",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  103,
-                  97,
-                  109,
-                  101,
-                  95,
-                  115,
-                  101,
-                  115,
-                  115,
-                  105,
-                  111,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "payer"
-              }
-            ]
-          }
-        },
-        {
-          "name": "magic_program",
-          "address": "Magic11111111111111111111111111111111111111"
-        },
-        {
-          "name": "magic_context",
-          "writable": true,
-          "address": "MagicContext1111111111111111111111111111111"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "delegate_game",
-      "docs": [
-        "Delegate the game session to ephemeral rollup"
-      ],
-      "discriminator": [
-        116,
-        183,
-        70,
-        107,
-        112,
-        223,
-        122,
-        210
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "signer": true
-        },
-        {
-          "name": "buffer_pda",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  98,
-                  117,
-                  102,
-                  102,
-                  101,
-                  114
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pda"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                77,
-                114,
-                5,
-                95,
-                47,
-                82,
-                134,
-                52,
-                137,
-                86,
-                82,
-                187,
-                171,
-                127,
-                215,
-                15,
-                130,
-                237,
-                63,
-                194,
-                237,
-                153,
-                229,
-                147,
-                116,
-                76,
-                248,
-                157,
-                160,
-                158,
-                243,
-                53
-              ]
-            }
-          }
-        },
-        {
-          "name": "delegation_record_pda",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100,
-                  101,
-                  108,
-                  101,
-                  103,
-                  97,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pda"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "delegation_program"
-            }
-          }
-        },
-        {
-          "name": "delegation_metadata_pda",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100,
-                  101,
-                  108,
-                  101,
-                  103,
-                  97,
-                  116,
-                  105,
-                  111,
-                  110,
-                  45,
-                  109,
-                  101,
-                  116,
-                  97,
-                  100,
-                  97,
-                  116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pda"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "delegation_program"
-            }
-          }
-        },
-        {
-          "name": "pda",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  103,
-                  97,
-                  109,
-                  101,
-                  95,
-                  115,
-                  101,
-                  115,
-                  115,
-                  105,
-                  111,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "payer"
-              }
-            ]
-          }
-        },
-        {
-          "name": "owner_program",
-          "address": "6DKEYNYdiTB77U36Gnkp5kGYqJPmeUTyqJuavhejrF6t"
-        },
-        {
-          "name": "delegation_program",
-          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "end_game",
       "docs": [
-        "End game, commit results, and mint victory NFT if won"
+        "End game, update progress, and earn SPL tokens"
       ],
       "discriminator": [
         224,
@@ -341,60 +84,122 @@
           }
         },
         {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        }
-      ],
-      "args": [
+          "name": "reward_mint",
+          "writable": true
+        },
         {
-          "name": "final_score",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "initialize_collection",
-      "docs": [
-        "Initialize the Victory NFT Collection (admin only) - Placeholder"
-      ],
-      "discriminator": [
-        112,
-        62,
-        53,
-        139,
-        173,
-        152,
-        98,
-        93
-      ],
-      "accounts": [
-        {
-          "name": "victory_collection",
+          "name": "player_token_account",
           "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reward_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "reward_authority",
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  118,
-                  105,
-                  99,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  97,
+                  117,
                   116,
+                  104,
                   111,
                   114,
-                  121,
-                  95,
-                  99,
-                  111,
-                  108,
-                  108,
-                  101,
-                  99,
-                  116,
                   105,
-                  111,
-                  110
+                  116,
+                  121
                 ]
               }
             ]
@@ -406,15 +211,24 @@
           "signer": true
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "final_score",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "initialize_player",
@@ -473,354 +287,10 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
-    },
-    {
-      "name": "make_move",
-      "docs": [
-        "Make a move (swap two candies) - executed in ephemeral rollup"
-      ],
-      "discriminator": [
-        78,
-        77,
-        152,
-        203,
-        222,
-        211,
-        208,
-        233
-      ],
-      "accounts": [
-        {
-          "name": "game_session",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  103,
-                  97,
-                  109,
-                  101,
-                  95,
-                  115,
-                  101,
-                  115,
-                  115,
-                  105,
-                  111,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "game_session.player",
-                "account": "GameSession"
-              }
-            ]
-          }
-        },
-        {
-          "name": "signer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "session_token",
-          "optional": true
-        }
-      ],
       "args": [
         {
-          "name": "from_row",
-          "type": "u8"
-        },
-        {
-          "name": "from_col",
-          "type": "u8"
-        },
-        {
-          "name": "to_row",
-          "type": "u8"
-        },
-        {
-          "name": "to_col",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "mint_victory_nft",
-      "docs": [
-        "Mint victory NFT"
-      ],
-      "discriminator": [
-        19,
-        172,
-        171,
-        208,
-        55,
-        63,
-        54,
-        241
-      ],
-      "accounts": [
-        {
-          "name": "game_session",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  103,
-                  97,
-                  109,
-                  101,
-                  95,
-                  115,
-                  101,
-                  115,
-                  115,
-                  105,
-                  111,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "authority"
-              }
-            ]
-          }
-        },
-        {
-          "name": "player_profile",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  108,
-                  97,
-                  121,
-                  101,
-                  114,
-                  95,
-                  112,
-                  114,
-                  111,
-                  102,
-                  105,
-                  108,
-                  101
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "authority"
-              }
-            ]
-          }
-        },
-        {
-          "name": "victory_collection",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  105,
-                  99,
-                  116,
-                  111,
-                  114,
-                  121,
-                  95,
-                  99,
-                  111,
-                  108,
-                  108,
-                  101,
-                  99,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "mint",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "token_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "authority"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "metadata",
-          "writable": true
-        },
-        {
-          "name": "master_edition",
-          "writable": true
-        },
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "associated_token_program",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-        },
-        {
-          "name": "token_metadata_program",
-          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "process_undelegation",
-      "discriminator": [
-        196,
-        28,
-        41,
-        206,
-        48,
-        37,
-        51,
-        167
-      ],
-      "accounts": [
-        {
-          "name": "base_account",
-          "writable": true
-        },
-        {
-          "name": "buffer"
-        },
-        {
-          "name": "payer",
-          "writable": true
-        },
-        {
-          "name": "system_program"
-        }
-      ],
-      "args": [
-        {
-          "name": "account_seeds",
-          "type": {
-            "vec": "bytes"
-          }
+          "name": "name",
+          "type": "string"
         }
       ]
     },
@@ -915,68 +385,6 @@
           "type": "u8"
         }
       ]
-    },
-    {
-      "name": "undelegate_game",
-      "docs": [
-        "Undelegate game session from rollup"
-      ],
-      "discriminator": [
-        40,
-        145,
-        154,
-        66,
-        48,
-        111,
-        127,
-        1
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "game_session",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  103,
-                  97,
-                  109,
-                  101,
-                  95,
-                  115,
-                  101,
-                  115,
-                  115,
-                  105,
-                  111,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "payer"
-              }
-            ]
-          }
-        },
-        {
-          "name": "magic_program",
-          "address": "Magic11111111111111111111111111111111111111"
-        },
-        {
-          "name": "magic_context",
-          "writable": true,
-          "address": "MagicContext1111111111111111111111111111111"
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
@@ -1004,32 +412,6 @@
         130,
         181,
         80
-      ]
-    },
-    {
-      "name": "SessionToken",
-      "discriminator": [
-        233,
-        4,
-        115,
-        14,
-        46,
-        21,
-        1,
-        15
-      ]
-    },
-    {
-      "name": "VictoryCollection",
-      "discriminator": [
-        202,
-        192,
-        0,
-        120,
-        237,
-        63,
-        79,
-        51
       ]
     }
   ],
@@ -1072,7 +454,7 @@
     {
       "code": 6007,
       "name": "InsufficientScore",
-      "msg": "Insufficient score to mint NFT"
+      "msg": "Insufficient score"
     }
   ],
   "types": [
@@ -1090,26 +472,8 @@
             "type": "u8"
           },
           {
-            "name": "grid",
-            "type": {
-              "array": [
-                {
-                  "array": [
-                    "u8",
-                    10
-                  ]
-                },
-                10
-              ]
-            }
-          },
-          {
             "name": "score",
             "type": "u64"
-          },
-          {
-            "name": "moves_made",
-            "type": "u32"
           },
           {
             "name": "start_time",
@@ -1117,6 +481,22 @@
           },
           {
             "name": "is_active",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LevelRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "high_score",
+            "type": "u64"
+          },
+          {
+            "name": "completed",
             "type": "bool"
           }
         ]
@@ -1132,72 +512,33 @@
             "type": "pubkey"
           },
           {
-            "name": "total_games",
-            "type": "u64"
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "levels",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "LevelRecord"
+                  }
+                },
+                10
+              ]
+            }
           },
           {
             "name": "total_wins",
             "type": "u64"
           },
           {
-            "name": "highest_level",
-            "type": "u8"
-          },
-          {
-            "name": "unlocked_levels",
-            "type": "u64"
-          },
-          {
-            "name": "total_candies_collected",
-            "type": "u64"
-          },
-          {
-            "name": "total_nfts_minted",
+            "name": "total_tokens_earned",
             "type": "u64"
           },
           {
             "name": "created_at",
             "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SessionToken",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "target_program",
-            "type": "pubkey"
-          },
-          {
-            "name": "session_signer",
-            "type": "pubkey"
-          },
-          {
-            "name": "valid_until",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "VictoryCollection",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "total_victories",
-            "type": "u64"
           }
         ]
       }

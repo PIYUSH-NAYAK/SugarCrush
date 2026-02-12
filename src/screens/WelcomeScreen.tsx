@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  TextInput,
 } from 'react-native';
 import {commonStyles} from '../styles/commonStyles';
 import {screenHeight, screenWidth, FONTS} from '../utils/Constants';
@@ -32,6 +33,7 @@ const WelcomeScreen = () => {
     useCandyCrushProgram();
   const [checkingProfile, setCheckingProfile] = useState(false);
   const [needsInitialization, setNeedsInitialization] = useState(false);
+  const [playerName, setPlayerName] = useState('');
 
   const translateY = useSharedValue(-200);
   const scale = useSharedValue(1);
@@ -63,11 +65,28 @@ const WelcomeScreen = () => {
   };
 
   const handleInitializePlayer = async () => {
+    // Validate player name
+    const trimmedName = playerName.trim();
+    if (!trimmedName) {
+      Alert.alert('Name Required', 'Please enter your player name to continue.');
+      return;
+    }
+
+    if (trimmedName.length < 3) {
+      Alert.alert('Name Too Short', 'Player name must be at least 3 characters.');
+      return;
+    }
+
+    if (trimmedName.length > 20) {
+      Alert.alert('Name Too Long', 'Player name must be at most 20 characters.');
+      return;
+    }
+
     try {
-      await initializePlayer();
+      await initializePlayer(trimmedName);
       Alert.alert(
         'Success!',
-        'Your player profile has been created on-chain!',
+        `Welcome ${trimmedName}! Your player profile has been created on-chain!`,
         [
           {
             text: 'Start Playing',
@@ -114,23 +133,17 @@ const WelcomeScreen = () => {
       />
 
       {/* Animated Bird */}
-      <LottieView
+      {/* <LottieView
         source={require('../assets/animations/bird.json')}
         speed={1}
         autoPlay
         loop
         hardwareAccelerationAndroid
         style={styles.lottieView}
-      />
+      /> */}
 
       {/* Game Title */}
-      <View style={styles.titleContainer}>
-        <Text style={styles.title}>Sugar Crush</Text>
-        <Text style={styles.subtitle}>🍭 Blockchain Edition 🍭</Text>
-        <Text style={styles.tagline}>
-          Connect your wallet to start playing!
-        </Text>
-      </View>
+     
 
       {/* Connect Wallet Button or Initialize Player Button */}
       {!connected ? (
@@ -139,34 +152,62 @@ const WelcomeScreen = () => {
             onPress={connect}
             disabled={connecting}
             style={styles.connectButton}>
-            <Image
-              source={require('../assets/icons/wallet.png')}
-              style={styles.walletIcon}
-            />
-            <Text style={styles.buttonText}>
-              {connecting ? 'Connecting...' : 'Connect Wallet'}
-            </Text>
+            <View style={styles.buttonContent}>
+              <Text style={styles.buttonText}>
+                {connecting ? 'Connecting...' : 'Connect Wallet'}
+              </Text>
+              <Image
+                source={require('../assets/icons/wallet.png')}
+                style={styles.walletIcon}
+              />
+            </View>
           </ScalePress>
         </Animated.View>
       ) : needsInitialization ? (
         <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
+          <View style={styles.nameInputContainer}>
+            <Text style={styles.nameLabel}>Choose Your Name</Text>
+            <Text style={styles.nameSublabel}>This will be your on-chain identity</Text>
+            <TextInput
+              style={styles.nameInput}
+              placeholder="Enter player name..."
+              placeholderTextColor="rgba(0, 230, 255, 0.35)"
+              value={playerName}
+              onChangeText={setPlayerName}
+              maxLength={20}
+              autoCapitalize="words"
+              autoCorrect={false}
+              editable={!loading}
+            />
+          </View>
           <ScalePress
             onPress={handleInitializePlayer}
-            disabled={loading}
-            style={[styles.connectButton, styles.initButton]}>
+            disabled={loading || !playerName.trim()}
+            style={StyleSheet.flatten([
+              styles.connectButton,
+              styles.initButton,
+              (!playerName.trim() && !loading) && styles.disabledButton,
+            ])}>
             <Text style={styles.buttonText}>
-              {loading ? 'Creating Profile...' : '✨ Create Player Profile'}
+              {loading ? 'Creating Profile...' : 'Create Profile'}
             </Text>
           </ScalePress>
           <Text style={styles.initHint}>
-            Create your on-chain profile to start playing!
+            Your profile lives on Solana blockchain
           </Text>
         </Animated.View>
       ) : null}
 
+      {/* Author Signature - only show when NOT in create profile mode */}
+      {!needsInitialization && (
+        <View style={styles.authorContainer}>
+          <Text style={styles.authorText}>~ Built for Monolith</Text>
+        </View>
+      )}
+
       {/* Decorative elements */}
       <View style={styles.decorativeContainer}>
-        <Text style={styles.decorativeText}>🎮 Play • Earn • Compete 🎮</Text>
+        <Text style={styles.decorativeText}>🎮 Match • Earn • Mint 🎮</Text>
       </View>
 
       {/* Loading Overlay */}
@@ -188,11 +229,12 @@ const WelcomeScreen = () => {
 
 const styles = StyleSheet.create({
   logo: {
-    width: screenWidth,
-    height: screenWidth * 0.8,
+    width: screenWidth * 1.0,
+    height: screenWidth * 0.8175,
     resizeMode: 'contain',
     position: 'absolute',
-    top: -20,
+    top: 40,
+    alignSelf: 'center',
   },
   lottieView: {
     width: 200,
@@ -204,57 +246,57 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: 'center',
-    marginTop: screenHeight * 0.35,
+    marginTop: screenHeight * 0.42,
+    paddingHorizontal: RFValue(30),
   },
   title: {
     fontFamily: FONTS.Lily,
-    fontSize: RFValue(38),
-    color: '#FF1493',
-    textShadowColor: '#FFF',
-    textShadowOffset: {width: 2, height: 2},
-    textShadowRadius: 4,
-    marginBottom: RFValue(8),
+    fontSize: RFValue(48),
+    color: '#FFFFFF',
+    textShadowColor: '#000',
+    textShadowOffset: {width: 3, height: 3},
+    textShadowRadius: 10,
+    marginBottom: RFValue(12),
+    letterSpacing: 2,
   },
   subtitle: {
     fontFamily: FONTS.Lily,
-    fontSize: RFValue(18),
-    color: '#9C27B0',
-    marginBottom: RFValue(5),
+    fontSize: RFValue(20),
+    color: '#FFD700',
+    textShadowColor: '#000',
+    textShadowOffset: {width: 2, height: 2},
+    textShadowRadius: 6,
+    letterSpacing: 1,
   },
-  tagline: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(14),
-    color: '#5B2333',
-    textAlign: 'center',
-    paddingHorizontal: RFValue(20),
-  },
+
   buttonContainer: {
-    marginTop: RFValue(40),
+    marginTop: screenHeight * 0.48,
     alignItems: 'center',
+    paddingHorizontal: RFValue(16),
   },
   connectButton: {
-    backgroundColor: '#9C27B0',
-    paddingVertical: RFValue(18),
-    paddingHorizontal: RFValue(40),
-    borderRadius: 25,
-    borderWidth: 3,
-    borderColor: '#FFD700',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    backgroundColor: 'rgba(15, 10, 40, 0.75)',
+    paddingVertical: RFValue(20),
+    paddingHorizontal: RFValue(24),
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#00E6FF',
+    shadowColor: '#00E6FF',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.9,
+    shadowRadius: 20,
+    elevation: 15,
     alignItems: 'center',
   },
   buttonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: RFValue(5),
+    justifyContent: 'center',
   },
   walletIcon: {
-    width: RFValue(28),
-    height: RFValue(28),
-    marginRight: RFValue(10),
+    width: RFValue(32),
+    height: RFValue(32),
+    marginLeft: RFValue(12),
     tintColor: '#FFF',
   },
   buttonText: {
@@ -277,20 +319,82 @@ const styles = StyleSheet.create({
   decorativeText: {
     fontFamily: FONTS.Lily,
     fontSize: RFValue(16),
-    color: '#FF1493',
-    textShadowColor: '#FFF',
-    textShadowOffset: {width: 1, height: 1},
+    color: '#FFFFFF',
+    textShadowColor: '#000',
+    textShadowOffset: {width: 2, height: 2},
     textShadowRadius: 2,
   },
+  authorContainer: {
+    position: 'absolute',
+    bottom: RFValue(100),
+    right: RFValue(50),
+    alignSelf: 'center',
+  },
+  authorText: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(12),
+    color: '#ffffffff',
+    opacity: 0.9,
+    fontStyle: 'italic',
+    letterSpacing: 0.5,
+    textShadowColor: '#000',
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
+  },
   initButton: {
-    backgroundColor: '#FF1493',
+    backgroundColor: 'rgba(0, 230, 255, 0.15)',
+    borderColor: '#00E6FF',
+    marginTop: RFValue(5),
   },
   initHint: {
     fontFamily: FONTS.Lily,
-    fontSize: RFValue(12),
-    color: '#9C27B0',
-    marginTop: RFValue(10),
+    fontSize: RFValue(11),
+    color: 'rgba(255, 255, 255, 0.4)',
+    marginTop: RFValue(12),
     textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  nameInputContainer: {
+    width: '85%',
+    marginBottom: RFValue(16),
+    alignItems: 'center',
+  },
+  nameLabel: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(18),
+    color: '#FFFFFF',
+    marginBottom: RFValue(4),
+    textShadowColor: '#000',
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 4,
+  },
+  nameSublabel: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(11),
+    color: 'rgba(0, 230, 255, 0.5)',
+    marginBottom: RFValue(14),
+    letterSpacing: 0.3,
+  },
+  nameInput: {
+    width: '100%',
+    backgroundColor: 'rgba(15, 10, 40, 0.75)',
+    borderWidth: 2,
+    borderColor: 'rgba(0, 230, 255, 0.4)',
+    borderRadius: 20,
+    paddingVertical: RFValue(14),
+    paddingHorizontal: RFValue(20),
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(16),
+    color: '#FFFFFF',
+    textAlign: 'center',
+    shadowColor: '#00E6FF',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  disabledButton: {
+    opacity: 0.4,
   },
 });
 

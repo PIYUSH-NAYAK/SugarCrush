@@ -10,6 +10,7 @@ export interface ProfileData {
     username?: string;
     gamesPlayed: number;
     highScore: number;
+    totalTokensEarned?: number;
 }
 
 export interface ProfileMenuState {

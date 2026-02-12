@@ -75,15 +75,10 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
 const styles = StyleSheet.create({
   container: {
     borderRadius: 100,
-    borderWidth: 3,
-    borderColor: '#FFD700',
-    backgroundColor: '#fff',
+    borderWidth: 0,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
   },
   image: {
     borderRadius: 100,

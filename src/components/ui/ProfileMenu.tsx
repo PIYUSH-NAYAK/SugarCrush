@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {
   Modal,
   View,
@@ -7,10 +7,9 @@ import {
   StyleSheet,
   Clipboard,
   Alert,
-  Image,
 } from 'react-native';
 import {useWallet} from '../../context/WalletContext';
-import {truncateAddress} from '../../utils/avatarUtils';
+import {truncateAddress, getThemeFromAddress} from '../../utils/avatarUtils';
 import {RFValue} from 'react-native-responsive-fontsize';
 import {FONTS, screenWidth} from '../../utils/Constants';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -24,7 +23,18 @@ interface ProfileMenuProps {
 }
 
 const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
-  const {publicKey, disconnect, profileData, updateProfileData} = useWallet();
+  const {publicKey, disconnect, profileData, updateProfileData, fetchPlayerProfile} = useWallet();
+
+  // Derive dynamic theme from wallet address
+  const theme = useMemo(() => {
+    return getThemeFromAddress(publicKey || 'default');
+  }, [publicKey]);
+
+  useEffect(() => {
+    if (visible && publicKey) {
+      fetchPlayerProfile();
+    }
+  }, [visible, publicKey]);
 
   const handleCopyAddress = () => {
     if (publicKey) {
@@ -45,7 +55,6 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
           onPress: () => {
             disconnect();
             onClose();
-            // Navigate back to WelcomeScreen (logout)
             setTimeout(() => {
               resetAndNavigate('WelcomeScreen');
             }, 300);
@@ -80,53 +89,103 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
         style={styles.overlay}
         activeOpacity={1}
         onPress={onClose}>
-        <TouchableOpacity activeOpacity={1} style={styles.menuContainer}>
-          <View style={styles.header}>
-            <ProfileAvatar onPress={() => {}} size={60} />
-            <Text style={styles.title}>Profile</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.label}>Wallet Address</Text>
+        <TouchableOpacity
+          activeOpacity={1}
+          style={[
+            styles.menuContainer,
+            {borderColor: theme.accentBorder, shadowColor: theme.accent},
+          ]}>
+          {/* Top: Profile + Wallet */}
+          <View
+            style={[
+              styles.topSection,
+              {borderBottomColor: theme.accentBorder},
+            ]}>
             <TouchableOpacity
-              style={styles.addressContainer}
-              onPress={handleCopyAddress}>
-              <Text style={styles.address}>
-                {publicKey ? truncateAddress(publicKey, 6, 6) : ''}
-              </Text>
-              <Image
-                source={require('../../assets/icons/copy.png')}
-                style={styles.copyIcon}
-              />
+              style={styles.profileSection}
+              onPress={handleChangeProfilePicture}>
+              <ProfileAvatar onPress={() => {}} size={70} />
+              <View
+                style={[
+                  styles.plusIconContainer,
+                  {backgroundColor: theme.accentMuted},
+                ]}>
+                <Text style={styles.plusIcon}>+</Text>
+              </View>
             </TouchableOpacity>
+
+            <View style={styles.walletSection}>
+              <Text style={[styles.walletLabel, {color: theme.accentText}]}>
+                Wallet
+              </Text>
+              <TouchableOpacity onPress={handleCopyAddress}>
+                <Text style={styles.walletAddress}>
+                  {publicKey ? truncateAddress(publicKey, 4, 4) : ''}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.disconnectButton}
+                onPress={handleDisconnect}>
+                <Text style={styles.disconnectText}>Disconnect</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
+          {/* Player Stats */}
           {profileData && (
-            <View style={styles.statsSection}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{profileData.gamesPlayed}</Text>
-                <Text style={styles.statLabel}>Games Played</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{profileData.highScore}</Text>
-                <Text style={styles.statLabel}>High Score</Text>
+            <View style={styles.statsContainer}>
+              <Text style={[styles.statsTitle, {color: theme.accentText}]}>
+                Player Stats
+              </Text>
+              <View style={styles.statsSection}>
+                <View
+                  style={[
+                    styles.statItem,
+                    {
+                      backgroundColor: theme.accentBg,
+                      borderColor: theme.accentBorder,
+                    },
+                  ]}>
+                  <Text style={styles.statValue}>
+                    {profileData.gamesPlayed}
+                  </Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>
+                    Games Played
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.statItem,
+                    {
+                      backgroundColor: theme.accentBg,
+                      borderColor: theme.accentBorder,
+                    },
+                  ]}>
+                  <Text style={styles.statValue}>
+                    {profileData.highScore}
+                  </Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>
+                    High Score
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.statItem,
+                    {
+                      backgroundColor: theme.accentBg,
+                      borderColor: theme.accentBorder,
+                    },
+                  ]}>
+                  <Text style={styles.statValue}>
+                    {profileData.totalTokensEarned || 0}
+                  </Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>
+                    Tokens Minted
+                  </Text>
+                </View>
               </View>
             </View>
           )}
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleChangeProfilePicture}>
-            <Text style={styles.buttonText}>📷 Change Profile Picture</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.disconnectButton]}
-            onPress={handleDisconnect}>
-            <Text style={[styles.buttonText, styles.disconnectText]}>
-              🚪 Disconnect Wallet
-            </Text>
-          </TouchableOpacity>
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
@@ -137,102 +196,120 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    backgroundColor: 'rgba(10, 5, 20, 0.92)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
   },
   menuContainer: {
-    width: screenWidth * 0.85,
-    backgroundColor: '#FFF5E6',
-    borderRadius: 20,
-    padding: RFValue(20),
-    borderWidth: 3,
-    borderColor: '#FFD700',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
+    width: screenWidth * 0.88,
+    backgroundColor: 'rgba(20, 12, 35, 0.85)',
+    borderRadius: 28,
+    padding: RFValue(22),
+    borderWidth: 1,
+    shadowOffset: {width: 0, height: 10},
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
+    shadowRadius: 24,
+    elevation: 15,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: RFValue(20),
-  },
-  title: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(24),
-    color: '#3A0E4C',
-    marginTop: RFValue(10),
-  },
-  section: {
-    marginBottom: RFValue(15),
-  },
-  label: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(12),
-    color: '#5B2333',
-    marginBottom: RFValue(5),
-  },
-  addressContainer: {
-    backgroundColor: '#EDC1B9',
-    padding: RFValue(12),
-    borderRadius: 12,
+  topSection: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: RFValue(24),
+    paddingBottom: RFValue(18),
+    borderBottomWidth: 1,
   },
-  address: {
+  profileSection: {
+    position: 'relative',
+  },
+  plusIconContainer: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: RFValue(22),
+    height: RFValue(22),
+    borderRadius: RFValue(11),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(20, 12, 35, 0.9)',
+  },
+  plusIcon: {
+    color: '#FFF',
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+    marginTop: -1,
+  },
+  walletSection: {
+    flex: 1,
+    marginLeft: RFValue(16),
+    justifyContent: 'center',
+  },
+  walletLabel: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(11),
+    marginBottom: RFValue(3),
+    letterSpacing: 0.5,
+  },
+  walletAddress: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(15),
+    color: '#E8DFFF',
+    fontWeight: 'bold',
+    marginBottom: RFValue(10),
+    letterSpacing: 0.3,
+  },
+  disconnectButton: {
+    backgroundColor: 'rgba(220, 70, 70, 0.2)',
+    paddingVertical: RFValue(7),
+    paddingHorizontal: RFValue(14),
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(220, 70, 70, 0.4)',
+  },
+  disconnectText: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(11),
+    color: '#FF6B6B',
+    fontWeight: 'bold',
+  },
+  statsContainer: {
+    marginTop: RFValue(4),
+  },
+  statsTitle: {
     fontFamily: FONTS.Lily,
     fontSize: RFValue(14),
-    color: '#3A0E4C',
-  },
-  copyIcon: {
-    width: RFValue(20),
-    height: RFValue(20),
-    tintColor: '#3A0E4C',
+    fontWeight: 'bold',
+    marginBottom: RFValue(12),
+    letterSpacing: 0.8,
+    textAlign: 'center',
   },
   statsSection: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#c2978f',
-    padding: RFValue(15),
-    borderRadius: 12,
-    marginBottom: RFValue(15),
+    justifyContent: 'space-between',
+    gap: 10,
   },
   statItem: {
+    flex: 1,
     alignItems: 'center',
+    paddingVertical: RFValue(14),
+    paddingHorizontal: RFValue(8),
+    borderRadius: 16,
+    borderWidth: 1,
   },
   statValue: {
     fontFamily: FONTS.Lily,
     fontSize: RFValue(20),
-    color: '#3A0E4C',
+    color: '#E8DFFF',
     fontWeight: 'bold',
   },
   statLabel: {
     fontFamily: FONTS.Lily,
-    fontSize: RFValue(10),
-    color: '#5B2333',
-    marginTop: RFValue(4),
-  },
-  button: {
-    backgroundColor: '#9C27B0',
-    padding: RFValue(14),
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: RFValue(10),
-  },
-  buttonText: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(14),
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  disconnectButton: {
-    backgroundColor: '#D32F2F',
-  },
-  disconnectText: {
-    color: '#FFF',
+    fontSize: RFValue(8),
+    marginTop: RFValue(5),
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
 });
 

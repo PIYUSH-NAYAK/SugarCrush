@@ -15,6 +15,7 @@
 		6947A947EA834958924C1B79 /* LilyScriptOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 81C97682C06A4862B881FCA8 /* LilyScriptOne-Regular.ttf */; };
 		01CD3EC794FF4D3F85368B5A /* SedgwickAveDisplay-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2134270A808F4AED9A1673FA /* SedgwickAveDisplay-Regular.ttf */; };
 		8335B294DB064AB184CFD51C /* TwinkleStar-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B3F351086D2D48E0B2421D31 /* TwinkleStar-Regular.ttf */; };
+		E09AF205992F4DBDA1BA1218 /* BubblegumSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3DC3BE26E2264EFBBB37CC5D /* BubblegumSans-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +32,7 @@
 		81C97682C06A4862B881FCA8 /* LilyScriptOne-Regular.ttf */ = {isa = PBXFileReference; name = "LilyScriptOne-Regular.ttf"; path = "../src/assets/fonts/LilyScriptOne-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		2134270A808F4AED9A1673FA /* SedgwickAveDisplay-Regular.ttf */ = {isa = PBXFileReference; name = "SedgwickAveDisplay-Regular.ttf"; path = "../src/assets/fonts/SedgwickAveDisplay-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		B3F351086D2D48E0B2421D31 /* TwinkleStar-Regular.ttf */ = {isa = PBXFileReference; name = "TwinkleStar-Regular.ttf"; path = "../src/assets/fonts/TwinkleStar-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		3DC3BE26E2264EFBBB37CC5D /* BubblegumSans-Regular.ttf */ = {isa = PBXFileReference; name = "BubblegumSans-Regular.ttf"; path = "../src/assets/fonts/BubblegumSans-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,6 +113,7 @@
 				81C97682C06A4862B881FCA8 /* LilyScriptOne-Regular.ttf */,
 				2134270A808F4AED9A1673FA /* SedgwickAveDisplay-Regular.ttf */,
 				B3F351086D2D48E0B2421D31 /* TwinkleStar-Regular.ttf */,
+				3DC3BE26E2264EFBBB37CC5D /* BubblegumSans-Regular.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -182,6 +185,7 @@
 				6947A947EA834958924C1B79 /* LilyScriptOne-Regular.ttf in Resources */,
 				01CD3EC794FF4D3F85368B5A /* SedgwickAveDisplay-Regular.ttf in Resources */,
 				8335B294DB064AB184CFD51C /* TwinkleStar-Regular.ttf in Resources */,
+				E09AF205992F4DBDA1BA1218 /* BubblegumSans-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,4 +1,4 @@
-import {View, Text, ImageBackground, Image, FlatList, Alert} from 'react-native';
+import {View, Text, ImageBackground, Image, FlatList, Alert, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {levelStyles} from '../styles/levelStyles';
@@ -12,6 +12,7 @@ import ProfileAvatar from '../components/ui/ProfileAvatar';
 import ProfileMenu from '../components/ui/ProfileMenu';
 import {useCandyCrushProgram} from '../hooks/useCandyCrushProgram';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import {useWallet} from '../context/WalletContext';
 
 const LevelScreen = () => {
   const {levels} = useLevelScore();
@@ -21,12 +22,11 @@ const LevelScreen = () => {
   const [isSettingUpGame, setIsSettingUpGame] = useState(false);
 
   const {
-    createSession,
-    isSessionValid,
     startGame,
-    delegateGame,
     loading,
   } = useCandyCrushProgram();
+  
+  const {publicKey} = useWallet();
 
   const levelPressHandler = async (id: string) => {
     const levelKey = `level${id}` as keyof GameLevels;
@@ -35,28 +35,13 @@ const LevelScreen = () => {
     setIsSettingUpGame(true);
 
     try {
-      // 1. Ensure session key exists and is valid
-      if (!isSessionValid()) {
-        console.log('🔑 Creating session key...');
-        await createSession();
-        console.log('✅ Session key created');
-      }
-
-      // 2. Start game on-chain
+      // Start game on-chain
       console.log('🎮 Starting game...');
       await startGame(parseInt(id, 10));
 
-      // NOTE: Delegation is handled automatically by MagicBlock's ephemeral rollups SDK
-      // The #[delegate] macro on DelegateGame handles this internally
-      // Manual delegation call removed to avoid PDA seed constraint errors
-      
-      // 3. Delegate game to ephemeral rollup
-      // console.log('🚀 Delegating game...');
-      // await delegateGame();
-
       console.log('✅ Game setup complete! Starting gameplay...');
 
-      // 4. Navigate to game screen
+      // Navigate to game screen
       navigate('GameScreen', {
         level: {
           ...level,
@@ -137,10 +122,14 @@ const LevelScreen = () => {
           )}
         </View>
 
-        {/* Profile Avatar in top-right */}
-        <View style={levelStyles.profileContainer}>
-          <ProfileAvatar onPress={() => setMenuVisible(true)} size={50} />
-        </View>
+        {/* Profile Avatar in Dynamic Island */}
+        <TouchableOpacity 
+          style={levelStyles.dynamicIslandContainer}
+          onPress={() => setMenuVisible(true)}>
+          <Text style={levelStyles.walletAddressText}>
+            {publicKey ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}` : 'Wallet'}
+          </Text>
+        </TouchableOpacity>
 
         <ImageBackground
           source={require('../assets/images/lines.jpg')}

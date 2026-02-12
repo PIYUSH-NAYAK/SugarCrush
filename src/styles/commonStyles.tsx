@@ -8,8 +8,8 @@ export const commonStyles = StyleSheet.create({
     alignItems: 'center',
   },
   img: {
-    width: screenWidth * 0.6,
-    height: screenHeight * 0.4,
+    width: screenWidth * 0.8,
+    height: screenHeight * 0.5,
     resizeMode: 'contain',
   },
   simpleContainer: {

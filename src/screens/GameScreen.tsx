@@ -29,7 +29,7 @@ const GameScreen = () => {
 
   const {completedLevel, unlockedLevel} = useLevelScore();
   const {profileData, updateProfileData} = useWallet();
-  const {endGame, mintVictoryNft, loading} = useCandyCrushProgram();
+  const {endGame, loading} = useCandyCrushProgram();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -67,34 +67,24 @@ const GameScreen = () => {
         });
       }
 
-      // End game on-chain
+      // End game on-chain (this also mints tokens if victory)
       await endGame(finalScore);
 
       if (isVictory) {
-        // Victory flow: end game + mint NFT
-        try {
-          await mintVictoryNft();
-          completedLevel(item?.level?.id, finalScore);
-          unlockedLevel(item?.level?.id + 1);
+        // Victory flow: tokens awarded automatically by endGame
+        completedLevel(item?.level?.id, finalScore);
+        unlockedLevel(item?.level?.id + 1);
 
-          Alert.alert(
-            '🎉 Congratulations! 🎉',
-            'You won! Your Victory NFT has been minted!',
-            [
-              {
-                text: 'Next Level',
-                onPress: () => goBack(),
-              },
-            ]
-          );
-        } catch (nftError) {
-          console.error('Error minting victory NFT:', nftError);
-          Alert.alert(
-            'Victory!',
-            'You won, but there was an issue minting your NFT. Please try again later.',
-            [{text: 'OK', onPress: () => goBack()}]
-          );
-        }
+        Alert.alert(
+          '🎉 Congratulations! 🎉',
+          'You won! Tokens have been awarded to your wallet!',
+          [
+            {
+              text: 'Next Level',
+              onPress: () => goBack(),
+            },
+          ]
+        );
       } else {
         // Loss flow
         Alert.alert('Game Over!', 'You did not collect enough candies!', [
@@ -171,8 +161,11 @@ const GameScreen = () => {
         iterations: 2,
       },
     ).start(() => {
-      setFirstAnimation(true);
-      setShowAnimation(false);
+      // Defer state updates to avoid useInsertionEffect warning
+      requestAnimationFrame(() => {
+        setFirstAnimation(true);
+        setShowAnimation(false);
+      });
     });
   };
 
@@ -216,13 +209,13 @@ const GameScreen = () => {
       )}
       <GameFooter />
 
-      {/* Loading Overlay for Game End / NFT Minting */}
+      {/* Loading Overlay for Game End / Token Minting */}
       {(isEndingGame || loading) && (
         <LoadingSpinner
           overlay
           message={
             isEndingGame
-              ? 'Ending game and minting NFT...'
+              ? 'Ending game and awarding tokens...'
               : 'Processing transaction...'
           }
         />

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,43 +6,77 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  Alert,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {commonStyles} from '../styles/commonStyles';
 import {screenHeight, screenWidth, FONTS} from '../utils/Constants';
 import {RFValue} from 'react-native-responsive-fontsize';
-import LottieView from 'lottie-react-native';
 import {useWallet} from '../context/WalletContext';
 import {useCandyCrushProgram} from '../hooks/useCandyCrushProgram';
-import ScalePress from '../components/ui/ScalePress';
 import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  SlideInDown,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
   withRepeat,
   withSequence,
 } from 'react-native-reanimated';
-import {useEffect} from 'react';
 import {resetAndNavigate} from '../utils/NavigationUtil';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import GameAlert from '../components/ui/GameAlert';
 
 const WelcomeScreen = () => {
-  const {connect, connecting, connected} = useWallet();
-  const {initializePlayer, fetchPlayerProfile, playerProfile, loading} =
+  const {connect, connecting, connected, publicKey} = useWallet();
+  const {initializePlayer, fetchPlayerProfile, loading} =
     useCandyCrushProgram();
   const [checkingProfile, setCheckingProfile] = useState(false);
   const [needsInitialization, setNeedsInitialization] = useState(false);
   const [playerName, setPlayerName] = useState('');
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message?: string;
+    icon?: string;
+    buttons?: {text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive'}[];
+  }>({visible: false, title: ''});
 
-  const translateY = useSharedValue(-200);
-  const scale = useSharedValue(1);
+  const showAlert = (
+    title: string,
+    message?: string,
+    buttons?: {text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive'}[],
+    icon?: string,
+  ) => {
+    setAlertConfig({visible: true, title, message, buttons, icon});
+  };
 
-  // Check player profile when wallet is connected
+  const dismissAlert = () => setAlertConfig(prev => ({...prev, visible: false}));
+
+  const logoY = useSharedValue(-180);
+  const pulse = useSharedValue(1);
+
+  useEffect(() => {
+    logoY.value = withTiming(0, {duration: 1400});
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1.04, {duration: 1200}),
+        withTiming(1, {duration: 1200}),
+      ),
+      -1,
+      true,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (connected) {
       checkPlayerProfile();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected]);
 
   const checkPlayerProfile = async () => {
@@ -50,10 +84,8 @@ const WelcomeScreen = () => {
     try {
       const profile = await fetchPlayerProfile();
       if (profile) {
-        // Profile exists, navigate to home
         resetAndNavigate('HomeScreen');
       } else {
-        // Profile doesn't exist, show initialization button
         setNeedsInitialization(true);
       }
     } catch (error) {
@@ -65,113 +97,90 @@ const WelcomeScreen = () => {
   };
 
   const handleInitializePlayer = async () => {
-    // Validate player name
     const trimmedName = playerName.trim();
-    if (!trimmedName) {
-      Alert.alert('Name Required', 'Please enter your player name to continue.');
+    if (!trimmedName || trimmedName.length < 3) {
+      showAlert('Invalid Name', 'Name must be at least 3 characters.', undefined, '✏️');
       return;
     }
-
-    if (trimmedName.length < 3) {
-      Alert.alert('Name Too Short', 'Player name must be at least 3 characters.');
-      return;
-    }
-
-    if (trimmedName.length > 20) {
-      Alert.alert('Name Too Long', 'Player name must be at most 20 characters.');
-      return;
-    }
-
     try {
       await initializePlayer(trimmedName);
-      Alert.alert(
-        'Success!',
-        `Welcome ${trimmedName}! Your player profile has been created on-chain!`,
-        [
-          {
-            text: 'Start Playing',
-            onPress: () => resetAndNavigate('HomeScreen'),
-          },
-        ]
+      showAlert(
+        'Welcome!',
+        `Profile created for ${trimmedName}!`,
+        [{text: '🎮 Play', onPress: () => resetAndNavigate('HomeScreen')}],
+        '🎉',
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to initialize player profile');
+      showAlert('Error', error.message || 'Failed to create profile', undefined, '⚠️');
     }
   };
 
-  useEffect(() => {
-    translateY.value = withTiming(0, {
-      duration: 2000,
-    });
+  const truncateAddress = (addr: string) =>
+    addr.length > 10 ? `${addr.slice(0, 4)}...${addr.slice(-4)}` : addr;
 
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.05, {duration: 1000}),
-        withTiming(1, {duration: 1000}),
-      ),
-      -1,
-      true,
-    );
-  }, [translateY, scale]);
-
-  const logoAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{translateY: translateY.value}],
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [{translateY: logoY.value}, {scale: pulse.value}],
   }));
 
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{scale: scale.value}],
-  }));
+  const isLoading = connecting || checkingProfile || loading;
 
-  return (
-    <ImageBackground
-      source={require('../assets/images/b2.png')}
-      style={commonStyles.container}>
-      {/* Animated Logo */}
-      <Animated.Image
-        source={require('../assets/images/banner.png')}
-        style={[styles.logo, logoAnimatedStyle]}
-      />
+  const handleConnect = async () => {
+    try {
+      await connect();
+    } catch (error: any) {
+      showAlert(
+        'Connection Failed',
+        error.message || 'Failed to connect wallet. Please try again.',
+        undefined,
+        '🔌',
+      );
+    }
+  };
 
-      {/* Animated Bird */}
-      {/* <LottieView
-        source={require('../assets/animations/bird.json')}
-        speed={1}
-        autoPlay
-        loop
-        hardwareAccelerationAndroid
-        style={styles.lottieView}
-      /> */}
+  // ──────────────────────────────────────────
+  // STEP 2: CREATE PROFILE (wallet connected)
+  // ──────────────────────────────────────────
+  if (connected && needsInitialization) {
+    return (
+      <ImageBackground
+        source={require('../assets/images/b2.png')}
+        style={commonStyles.container}>
+        <View style={styles.overlay} />
 
-      {/* Game Title */}
-     
+        {/* Logo — top area */}
+        <Animated.Image
+          entering={FadeInDown.duration(600)}
+          source={require('../assets/images/banner.png')}
+          style={styles.logoTop}
+        />
 
-      {/* Connect Wallet Button or Initialize Player Button */}
-      {!connected ? (
-        <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
-          <ScalePress
-            onPress={connect}
-            disabled={connecting}
-            style={styles.connectButton}>
-            <View style={styles.buttonContent}>
-              <Text style={styles.buttonText}>
-                {connecting ? 'Connecting...' : 'Connect Wallet'}
-              </Text>
-              <Image
-                source={require('../assets/icons/wallet.png')}
-                style={styles.walletIcon}
-              />
-            </View>
-          </ScalePress>
-        </Animated.View>
-      ) : needsInitialization ? (
-        <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
-          <View style={styles.nameInputContainer}>
-            <Text style={styles.nameLabel}>Choose Your Name</Text>
-            <Text style={styles.nameSublabel}>This will be your on-chain identity</Text>
+        {/* Card — lower half */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.cardArea}>
+          {/* Wallet chip */}
+          <Animated.View
+            entering={FadeIn.duration(500).delay(200)}
+            style={styles.chip}>
+            <View style={styles.chipDot} />
+            <Text style={styles.chipText}>
+              {truncateAddress(publicKey || '')}
+            </Text>
+          </Animated.View>
+
+          {/* Profile card */}
+          <Animated.View
+            entering={SlideInDown.duration(600).delay(300)}
+            style={styles.card}>
+            <Text style={styles.cardTitle}>Create Profile</Text>
+
             <TextInput
-              style={styles.nameInput}
-              placeholder="Enter player name..."
-              placeholderTextColor="rgba(0, 230, 255, 0.35)"
+              style={[
+                styles.input,
+                playerName.length > 0 && styles.inputActive,
+              ]}
+              placeholder="Enter your name"
+              placeholderTextColor="rgba(255,255,255,0.3)"
               value={playerName}
               onChangeText={setPlayerName}
               maxLength={20}
@@ -179,222 +188,270 @@ const WelcomeScreen = () => {
               autoCorrect={false}
               editable={!loading}
             />
-          </View>
-          <ScalePress
-            onPress={handleInitializePlayer}
-            disabled={loading || !playerName.trim()}
-            style={StyleSheet.flatten([
-              styles.connectButton,
-              styles.initButton,
-              (!playerName.trim() && !loading) && styles.disabledButton,
-            ])}>
-            <Text style={styles.buttonText}>
-              {loading ? 'Creating Profile...' : 'Create Profile'}
+
+            <TouchableOpacity
+              onPress={handleInitializePlayer}
+              disabled={loading || !playerName.trim()}
+              activeOpacity={0.8}
+              style={[
+                styles.primaryBtn,
+                (!playerName.trim() || loading) && styles.primaryBtnDisabled,
+              ]}>
+              <Text style={styles.primaryBtnText}>
+                {loading ? 'Creating...' : 'Let\u2019s Go'}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </KeyboardAvoidingView>
+
+        {isLoading && (
+          <LoadingSpinner
+            overlay
+            message={
+              checkingProfile ? 'Checking profile...' : 'Creating profile...'
+            }
+          />
+        )}
+
+        <GameAlert
+          visible={alertConfig.visible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          buttons={alertConfig.buttons}
+          icon={alertConfig.icon}
+          onDismiss={dismissAlert}
+        />
+      </ImageBackground>
+    );
+  }
+
+  // ──────────────────────────────────────────
+  // STEP 1: CONNECT WALLET (first visit)
+  // ──────────────────────────────────────────
+  return (
+    <ImageBackground
+      source={require('../assets/images/b2.png')}
+      style={commonStyles.container}>
+      <View style={styles.overlay} />
+
+      {/* Hero logo — centered */}
+      <Animated.Image
+        source={require('../assets/images/banner.png')}
+        style={[styles.logoHero, logoStyle]}
+      />
+
+      {/* Bottom CTA */}
+      <View style={styles.bottomCta}>
+        <Animated.Text
+          entering={FadeInUp.duration(700).delay(500)}
+          style={styles.tagline}>
+          Match · Earn · Mint
+        </Animated.Text>
+
+        <Animated.View entering={FadeInUp.duration(700).delay(800)}>
+          <TouchableOpacity
+            onPress={handleConnect}
+            disabled={connecting}
+            activeOpacity={0.85}
+            style={styles.connectBtn}>
+            <Image
+              source={require('../assets/icons/wallet.png')}
+              style={styles.walletIcon}
+            />
+            <Text style={styles.connectBtnText}>
+              {connecting ? 'Connecting...' : 'Connect Wallet'}
             </Text>
-          </ScalePress>
-          <Text style={styles.initHint}>
-            Your profile lives on Solana blockchain
-          </Text>
+          </TouchableOpacity>
         </Animated.View>
-      ) : null}
-
-      {/* Author Signature - only show when NOT in create profile mode */}
-      {!needsInitialization && (
-        <View style={styles.authorContainer}>
-          <Text style={styles.authorText}>~ Built for Monolith</Text>
-        </View>
-      )}
-
-      {/* Decorative elements */}
-      <View style={styles.decorativeContainer}>
-        <Text style={styles.decorativeText}>🎮 Match • Earn • Mint 🎮</Text>
       </View>
 
-      {/* Loading Overlay */}
-      {(connecting || checkingProfile || loading) && (
-        <LoadingSpinner
-          overlay
-          message={
-            connecting
-              ? 'Connecting to Solflare Wallet...'
-              : checkingProfile
-              ? 'Checking player profile...'
-              : 'Creating player profile...'
-          }
-        />
+      {isLoading && (
+        <LoadingSpinner overlay message="Connecting wallet..." />
       )}
+
+      <GameAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        icon={alertConfig.icon}
+        onDismiss={dismissAlert}
+      />
     </ImageBackground>
   );
 };
 
+// ──────────────────────────────────────────
+// STYLES
+// ──────────────────────────────────────────
 const styles = StyleSheet.create({
-  logo: {
-    width: screenWidth * 1.0,
-    height: screenWidth * 0.8175,
+  // ── Shared ──
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8, 4, 28, 0.4)',
+  },
+
+  // ─────────────────────────────────
+  // STEP 1 — Connect Wallet
+  // ─────────────────────────────────
+  logoHero: {
+    width: screenWidth * 0.88,
+    height: screenWidth * 0.72,
     resizeMode: 'contain',
-    position: 'absolute',
-    top: 40,
-    alignSelf: 'center',
+    marginTop: -screenHeight * 0.06,
   },
-  lottieView: {
-    width: 200,
-    height: 200,
+  bottomCta: {
     position: 'absolute',
-    right: -20,
-    top: '25%',
-    transform: [{scaleX: -1}],
-  },
-  titleContainer: {
+    bottom: 0,
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    marginTop: screenHeight * 0.42,
-    paddingHorizontal: RFValue(30),
+    paddingBottom: Platform.OS === 'ios' ? RFValue(50) : RFValue(40),
   },
-  title: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(48),
-    color: '#FFFFFF',
-    textShadowColor: '#000',
-    textShadowOffset: {width: 3, height: 3},
-    textShadowRadius: 10,
-    marginBottom: RFValue(12),
-    letterSpacing: 2,
-  },
-  subtitle: {
+  tagline: {
     fontFamily: FONTS.Lily,
     fontSize: RFValue(20),
     color: '#FFD700',
-    textShadowColor: '#000',
-    textShadowOffset: {width: 2, height: 2},
-    textShadowRadius: 6,
-    letterSpacing: 1,
+    letterSpacing: 3,
+    marginBottom: RFValue(24),
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: {width: 1, height: 2},
+    textShadowRadius: 8,
   },
-
-  buttonContainer: {
-    marginTop: screenHeight * 0.48,
-    alignItems: 'center',
-    paddingHorizontal: RFValue(16),
-  },
-  connectButton: {
-    backgroundColor: 'rgba(15, 10, 40, 0.75)',
-    paddingVertical: RFValue(20),
-    paddingHorizontal: RFValue(24),
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: '#00E6FF',
-    shadowColor: '#00E6FF',
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0.9,
-    shadowRadius: 20,
-    elevation: 15,
-    alignItems: 'center',
-  },
-  buttonContent: {
+  connectBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  walletIcon: {
-    width: RFValue(32),
-    height: RFValue(32),
-    marginLeft: RFValue(12),
-    tintColor: '#FFF',
-  },
-  buttonText: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(20),
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  walletName: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(10),
-    color: '#FFD700',
-    marginTop: RFValue(2),
-  },
-  decorativeContainer: {
-    position: 'absolute',
-    bottom: RFValue(30),
-    alignSelf: 'center',
-  },
-  decorativeText: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(16),
-    color: '#FFFFFF',
-    textShadowColor: '#000',
-    textShadowOffset: {width: 2, height: 2},
-    textShadowRadius: 2,
-  },
-  authorContainer: {
-    position: 'absolute',
-    bottom: RFValue(100),
-    right: RFValue(50),
-    alignSelf: 'center',
-  },
-  authorText: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(12),
-    color: '#ffffffff',
-    opacity: 0.9,
-    fontStyle: 'italic',
-    letterSpacing: 0.5,
-    textShadowColor: '#000',
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-  initButton: {
-    backgroundColor: 'rgba(0, 230, 255, 0.15)',
-    borderColor: '#00E6FF',
-    marginTop: RFValue(5),
-  },
-  initHint: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(11),
-    color: 'rgba(255, 255, 255, 0.4)',
-    marginTop: RFValue(12),
-    textAlign: 'center',
-    letterSpacing: 0.3,
-  },
-  nameInputContainer: {
-    width: '85%',
-    marginBottom: RFValue(16),
-    alignItems: 'center',
-  },
-  nameLabel: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(18),
-    color: '#FFFFFF',
-    marginBottom: RFValue(4),
-    textShadowColor: '#000',
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 4,
-  },
-  nameSublabel: {
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(11),
-    color: 'rgba(0, 230, 255, 0.5)',
-    marginBottom: RFValue(14),
-    letterSpacing: 0.3,
-  },
-  nameInput: {
-    width: '100%',
-    backgroundColor: 'rgba(15, 10, 40, 0.75)',
-    borderWidth: 2,
-    borderColor: 'rgba(0, 230, 255, 0.4)',
-    borderRadius: 20,
-    paddingVertical: RFValue(14),
-    paddingHorizontal: RFValue(20),
-    fontFamily: FONTS.Lily,
-    fontSize: RFValue(16),
-    color: '#FFFFFF',
-    textAlign: 'center',
+    backgroundColor: 'rgba(12, 8, 44, 0.8)',
+    paddingVertical: RFValue(16),
+    paddingHorizontal: RFValue(36),
+    borderRadius: 28,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 230, 255, 0.5)',
     shadowColor: '#00E6FF',
     shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    elevation: 14,
   },
-  disabledButton: {
-    opacity: 0.4,
+  walletIcon: {
+    width: RFValue(22),
+    height: RFValue(22),
+    tintColor: '#00E6FF',
+    marginRight: RFValue(10),
+  },
+  connectBtnText: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(17),
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+
+  // ─────────────────────────────────
+  // STEP 2 — Create Profile
+  // ─────────────────────────────────
+  logoTop: {
+    width: screenWidth * 0.8,
+    height: screenWidth * 0.8,
+    resizeMode: 'contain',
+    position: 'absolute',
+    top: screenHeight * 0.15,
+    alignSelf: 'center',
+  },
+  cardArea: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? RFValue(46) : RFValue(34),
+  },
+
+  // Wallet chip
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 230, 255, 0.08)',
+    paddingHorizontal: RFValue(14),
+    paddingVertical: RFValue(6),
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 255, 0.2)',
+    marginBottom: RFValue(14),
+  },
+  chipDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#4ADE80',
+    marginRight: RFValue(8),
+  },
+  chipText: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(11),
+    color: 'rgba(255,255,255,0.65)',
+    letterSpacing: 1,
+  },
+
+  // Card
+  card: {
+    width: screenWidth * 0.88,
+    backgroundColor: 'rgba(12, 8, 44, 0.82)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 255, 0.12)',
+    paddingHorizontal: RFValue(24),
+    paddingTop: RFValue(24),
+    paddingBottom: RFValue(22),
+    alignItems: 'center',
+  },
+  cardTitle: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(22),
+    color: '#FFFFFF',
+    marginBottom: RFValue(18),
+  },
+  input: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    paddingVertical: RFValue(13),
+    paddingHorizontal: RFValue(18),
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(16),
+    color: '#FFFFFF',
+    marginBottom: RFValue(16),
+  },
+  inputActive: {
+    borderColor: 'rgba(0, 230, 255, 0.4)',
+  },
+
+  // CTA button
+  primaryBtn: {
+    width: '100%',
+    backgroundColor: '#00C9DB',
+    paddingVertical: RFValue(15),
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#00C9DB',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  primaryBtnDisabled: {
+    backgroundColor: 'rgba(0, 201, 219, 0.2)',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  primaryBtnText: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(17),
+    color: '#FFFFFF',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });
 

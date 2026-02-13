@@ -1,4 +1,4 @@
-import {ImageBackground, Alert, StyleSheet, Animated} from 'react-native';
+import {ImageBackground, StyleSheet, Animated} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import {commonStyles} from '../styles/commonStyles';
 import GameHeader from '../components/game/GameHeader';
@@ -13,6 +13,7 @@ import LottieView from 'lottie-react-native';
 import {useWallet} from '../context/WalletContext';
 import {useCandyCrushProgram} from '../hooks/useCandyCrushProgram';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import GameAlert from '../components/ui/GameAlert';
 
 const GameScreen = () => {
   const route = useRoute();
@@ -26,6 +27,24 @@ const GameScreen = () => {
   const [showAnimation, setShowAnimation] = useState<boolean>(false);
   const [firstAnimation, setFirstAnimation] = useState<boolean>(false);
   const [isEndingGame, setIsEndingGame] = useState<boolean>(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message?: string;
+    icon?: string;
+    buttons?: {text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive'}[];
+  }>({visible: false, title: ''});
+
+  const showAlert = (
+    title: string,
+    message?: string,
+    buttons?: {text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive'}[],
+    icon?: string,
+  ) => {
+    setAlertConfig({visible: true, title, message, buttons, icon});
+  };
+
+  const dismissAlert = () => setAlertConfig(prev => ({...prev, visible: false}));
 
   const {completedLevel, unlockedLevel} = useLevelScore();
   const {profileData, updateProfileData} = useWallet();
@@ -75,31 +94,28 @@ const GameScreen = () => {
         completedLevel(item?.level?.id, finalScore);
         unlockedLevel(item?.level?.id + 1);
 
-        Alert.alert(
-          '🎉 Congratulations! 🎉',
+        showAlert(
+          'Congratulations!',
           'You won! Tokens have been awarded to your wallet!',
-          [
-            {
-              text: 'Next Level',
-              onPress: () => goBack(),
-            },
-          ]
+          [{text: 'Next Level', onPress: () => goBack()}],
+          '🎉',
         );
       } else {
         // Loss flow
-        Alert.alert('Game Over!', 'You did not collect enough candies!', [
-          {
-            text: "phew!, I'll win next time",
-            onPress: () => goBack(),
-          },
-        ]);
+        showAlert(
+          'Game Over!',
+          'You did not collect enough candies!',
+          [{text: "phew!, I'll win next time", onPress: () => goBack()}],
+          '💔',
+        );
       }
     } catch (error) {
       console.error('Error ending game:', error);
-      Alert.alert(
+      showAlert(
         'Error',
         'There was an issue ending the game. Please try again.',
-        [{text: 'OK', onPress: () => goBack()}]
+        [{text: 'OK', onPress: () => goBack()}],
+        '⚠️',
       );
     } finally {
       setIsEndingGame(false);
@@ -220,6 +236,15 @@ const GameScreen = () => {
           }
         />
       )}
+
+      <GameAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        icon={alertConfig.icon}
+        onDismiss={dismissAlert}
+      />
     </ImageBackground>
   );
 };

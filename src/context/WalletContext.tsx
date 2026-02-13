@@ -5,7 +5,6 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import {Alert} from 'react-native';
 import {PublicKey} from '@solana/web3.js';
 import {
   transact,
@@ -176,8 +175,8 @@ export const WalletProvider = ({children}: {children: ReactNode}) => {
       console.error('Error connecting wallet:', error);
       setConnected(false);
       setPublicKey(null);
-      // Show user-friendly error message
-      Alert.alert('Connection Failed', 'Failed to connect wallet. Please make sure Solflare is installed and try again.');
+      // Let the calling screen handle showing the error UI
+      throw new Error('Failed to connect wallet. Please make sure Solflare is installed and try again.');
     } finally {
       setConnecting(false);
     }

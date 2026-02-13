@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   Modal,
   View,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Clipboard,
-  Alert,
 } from 'react-native';
 import {useWallet} from '../../context/WalletContext';
 import {truncateAddress, getThemeFromAddress} from '../../utils/avatarUtils';
@@ -16,6 +15,7 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import {mmkvStorage, STORAGE_KEYS} from '../../state/storage';
 import ProfileAvatar from './ProfileAvatar';
 import {resetAndNavigate} from '../../utils/NavigationUtil';
+import GameAlert from './GameAlert';
 
 interface ProfileMenuProps {
   visible: boolean;
@@ -24,6 +24,25 @@ interface ProfileMenuProps {
 
 const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
   const {publicKey, disconnect, profileData, updateProfileData, fetchPlayerProfile} = useWallet();
+
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message?: string;
+    icon?: string;
+    buttons?: {text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive'}[];
+  }>({visible: false, title: ''});
+
+  const showAlert = (
+    title: string,
+    message?: string,
+    buttons?: {text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive'}[],
+    icon?: string,
+  ) => {
+    setAlertConfig({visible: true, title, message, buttons, icon});
+  };
+
+  const dismissAlert = () => setAlertConfig(prev => ({...prev, visible: false}));
 
   // Derive dynamic theme from wallet address
   const theme = useMemo(() => {
@@ -39,12 +58,12 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
   const handleCopyAddress = () => {
     if (publicKey) {
       Clipboard.setString(publicKey);
-      Alert.alert('Copied!', 'Wallet address copied to clipboard');
+      showAlert('Copied!', 'Wallet address copied to clipboard', undefined, '📋');
     }
   };
 
   const handleDisconnect = () => {
-    Alert.alert(
+    showAlert(
       'Disconnect Wallet',
       'Are you sure you want to disconnect your wallet?',
       [
@@ -61,6 +80,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
           },
         },
       ],
+      '🔌',
     );
   };
 
@@ -74,7 +94,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
       const uri = result.assets[0].uri;
       mmkvStorage.setItem(STORAGE_KEYS.CUSTOM_AVATAR_URI, uri);
       updateProfileData({customAvatarUri: uri});
-      Alert.alert('Success', 'Profile picture updated!');
+      showAlert('Success', 'Profile picture updated!', undefined, '✅');
       onClose();
     }
   };
@@ -188,6 +208,15 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
           )}
         </TouchableOpacity>
       </TouchableOpacity>
+
+      <GameAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        icon={alertConfig.icon}
+        onDismiss={dismissAlert}
+      />
     </Modal>
   );
 };

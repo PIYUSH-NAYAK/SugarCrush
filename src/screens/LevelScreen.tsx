@@ -1,4 +1,4 @@
-import {View, Text, ImageBackground, Image, FlatList, Alert, TouchableOpacity} from 'react-native';
+import {View, Text, ImageBackground, Image, FlatList, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {levelStyles} from '../styles/levelStyles';
@@ -13,6 +13,7 @@ import ProfileMenu from '../components/ui/ProfileMenu';
 import {useCandyCrushProgram} from '../hooks/useCandyCrushProgram';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import {useWallet} from '../context/WalletContext';
+import GameAlert from '../components/ui/GameAlert';
 
 const LevelScreen = () => {
   const {levels} = useLevelScore();
@@ -20,6 +21,24 @@ const LevelScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [vol, setVol] = React.useState(true);
   const [isSettingUpGame, setIsSettingUpGame] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message?: string;
+    icon?: string;
+    buttons?: {text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive'}[];
+  }>({visible: false, title: ''});
+
+  const showAlert = (
+    title: string,
+    message?: string,
+    buttons?: {text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive'}[],
+    icon?: string,
+  ) => {
+    setAlertConfig({visible: true, title, message, buttons, icon});
+  };
+
+  const dismissAlert = () => setAlertConfig(prev => ({...prev, visible: false}));
 
   const {
     startGame,
@@ -50,9 +69,11 @@ const LevelScreen = () => {
       });
     } catch (error: any) {
       console.error('Error setting up game:', error);
-      Alert.alert(
+      showAlert(
         'Setup Failed',
-        error.message || 'Failed to setup game session. Please try again.'
+        error.message || 'Failed to setup game session. Please try again.',
+        undefined,
+        '⚠️',
       );
     } finally {
       setIsSettingUpGame(false);
@@ -178,6 +199,15 @@ const LevelScreen = () => {
           }
         />
       )}
+
+      <GameAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        icon={alertConfig.icon}
+        onDismiss={dismissAlert}
+      />
     </ImageBackground>
   );
 };

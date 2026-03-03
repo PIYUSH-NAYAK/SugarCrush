@@ -58,8 +58,8 @@ const GameTile = ({data, setData, setCollectedCandies}: GameTileProps) => {
                         ? {}
                         : {
                             transform: [
-                              {translateX: animatedValue[rowIndex][colIndex].x},
-                              {translateY: animatedValue[rowIndex][colIndex].y},
+                              {translateX: animatedValue[rowIndex][colIndex]?.x || 0},
+                              {translateY: animatedValue[rowIndex][colIndex]?.y || 0},
                             ],
                           },
                     ]}

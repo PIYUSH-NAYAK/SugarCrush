@@ -140,73 +140,86 @@ export const initializePlayer = async (
     });
 };
 
-/**
- * Get player profile data
- */
 export const getPlayerProfile = async (
-    program: Program,
+    _program: Program,
     playerPublicKey: PublicKey
 ) => {
     try {
         const [playerProfilePda] = getPlayerProfilePda(playerPublicKey);
 
-        // Use connection.getAccountInfo instead of program.account.fetch
-        // to avoid Buffer polyfill issues in React Native
+        // Use connection.getAccountInfo() directly to avoid Anchor's borsh decoder
+        // which uses Node.js Buffer methods (readUIntLE) not available in React Native Hermes
         const accountInfo = await connection.getAccountInfo(playerProfilePda);
 
         if (!accountInfo || !accountInfo.data) {
-            console.log('Account does not exist or has no data', playerProfilePda.toBase58());
-            return null;
+            return null; // Account not yet created — new user
         }
 
-        // Manual deserialization - skip 8-byte discriminator, then read fields
+        // Manually decode the borsh-serialized PlayerProfile struct
+        // Layout (after 8-byte discriminator):
+        //   authority         : 32 bytes (pubkey)
+        //   total_games       : 8  bytes (u64 LE)
+        //   total_wins        : 8  bytes (u64 LE)
+        //   highest_level     : 1  byte  (u8)
+        //   unlocked_levels   : 8  bytes (u64 LE)
+        //   total_candies_collected : 8 bytes (u64 LE)
+        //   total_nfts_minted : 8  bytes (u64 LE)
+        //   energy            : 1  byte  (u8)
+        //   last_energy_update: 8  bytes (i64 LE)
+        //   staked_sugar      : 8  bytes (u64 LE)
+        //   created_at        : 8  bytes (i64 LE)
         const data = accountInfo.data;
-        let offset = 8; // Skip Anchor discriminator
+        const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 
-        // PlayerProfile structure from Rust:
-        // pub authority: Pubkey,              // 32 bytes
-        // pub name: String,                   // 4 bytes length + UTF-8 content
-        // pub levels: [LevelRecord; 10],      // 10 * (8 + 1) = 90 bytes
-        // pub total_wins: u64,                // 8 bytes
-        // pub total_tokens_earned: u64,       // 8 bytes
-        // pub created_at: i64,                // 8 bytes
+        let offset = 8; // skip 8-byte Anchor discriminator
 
-        const authority = new PublicKey(data.slice(offset, offset + 32));
+        const authorityBytes = data.slice(offset, offset + 32);
+        const authority = new PublicKey(authorityBytes).toBase58();
         offset += 32;
 
-        // Parse name (String type: 4-byte length prefix + UTF-8 bytes)
-        const nameLength = data.readUInt32LE(offset);
-        offset += 4;
-        const name = data.slice(offset, offset + nameLength).toString('utf-8');
-        offset += nameLength;
+        // Helper: read u64 as Number (safe for values < 2^53)
+        const readU64 = (o: number) => {
+            const lo = view.getUint32(o, true);
+            const hi = view.getUint32(o + 4, true);
+            return hi * 0x100000000 + lo;
+        };
 
-        // Parse levels array (10 LevelRecord structs)
-        const levels = [];
-        for (let i = 0; i < 10; i++) {
-            const highScore = Number(data.readBigUInt64LE(offset));
-            offset += 8;
-            const completed = data.readUInt8(offset) !== 0;
-            offset += 1;
-            levels.push({ highScore, completed });
-        }
+        // Helper: read i64 as Number
+        const readI64 = (o: number) => {
+            const lo = view.getUint32(o, true);
+            const hi = view.getInt32(o + 4, true);
+            return hi * 0x100000000 + lo;
+        };
 
-        const totalWins = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-
-        const totalTokensEarned = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-
-        const createdAt = Number(data.readBigInt64LE(offset));
+        const totalGames = readU64(offset); offset += 8;
+        const totalWins = readU64(offset); offset += 8;
+        const highestLevel = view.getUint8(offset); offset += 1;
+        const unlockedLevels = readU64(offset); offset += 8;
+        const totalCandiesCollected = readU64(offset); offset += 8;
+        const totalNftsMinted = readU64(offset); offset += 8;
+        const energy = view.getUint8(offset); offset += 1;
+        const lastEnergyUpdate = readI64(offset); offset += 8;
+        const stakedSugar = readU64(offset); offset += 8;
+        const createdAt = readI64(offset);
 
         return {
-            authority: authority.toBase58(),
-            name,
-            levels,
+            authority,
+            totalGames,
             totalWins,
-            totalTokensEarned,
-            createdAt
+            highestLevel,
+            unlockedLevels,
+            totalCandiesCollected,
+            totalNftsMinted,
+            energy,
+            lastEnergyUpdate,
+            stakedSugar,
+            createdAt,
         };
-    } catch (error) {
+    } catch (error: any) {
+        // "Account does not exist" is expected for new users — silently return null
+        if (error?.message?.includes('Account does not exist')) {
+            return null;
+        }
         console.error('Error fetching player profile:', error);
         return null;
     }

@@ -94,7 +94,7 @@ export const WalletProvider = ({children}: {children: ReactNode}) => {
             pubKey = new PublicKey(publicKeyString);
           } 
           // Check if it's a Uint8Array or array
-          else if (typeof addressData === 'object' && (addressData instanceof Uint8Array || Array.isArray(addressData))) {
+          else if (typeof addressData === 'object' && ((addressData as any) instanceof Uint8Array || Array.isArray(addressData))) {
             console.log('Detected Uint8Array/Array format');
             pubKey = new PublicKey(addressData);
             publicKeyString = pubKey.toBase58();
@@ -212,9 +212,9 @@ export const WalletProvider = ({children}: {children: ReactNode}) => {
       if (playerProfile) {
         const updatedProfile: ProfileData = {
           walletAddress: publicKey,
-          gamesPlayed: playerProfile.totalWins,
-          highScore: playerProfile.levels.reduce((max, level) => Math.max(max, level.highScore), 0),
-          totalTokensEarned: playerProfile.totalTokensEarned,
+          gamesPlayed: playerProfile.totalGames,
+          highScore: playerProfile.highestLevel * 1000 + playerProfile.totalWins, // just a placeholder formula for now
+          totalTokensEarned: playerProfile.totalCandiesCollected,
           customAvatarUri: profileData?.customAvatarUri,
           username: profileData?.username,
         };

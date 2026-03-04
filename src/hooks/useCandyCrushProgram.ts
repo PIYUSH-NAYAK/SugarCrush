@@ -6,6 +6,8 @@ import {
     getPlayerProfile as getPlayerProfileService,
     startGame as startGameService,
     endGame as endGameService,
+    refillEnergy as refillEnergyService,
+    claimSugarRewards as claimSugarRewardsService,
     initializeProgram,
 } from '../services/solanaService';
 
@@ -88,7 +90,8 @@ export const useCandyCrushProgram = () => {
                 console.log('✅ Game started!');
                 return signature;
             } catch (err: any) {
-                console.error('Error starting game:', err);
+                // Use warn (not error) so LogBox doesn't show a red overlay for expected errors
+                console.warn('startGame failed:', err?.message || err);
                 setError(err.message || 'Failed to start game');
                 throw err;
             } finally {
@@ -134,16 +137,70 @@ export const useCandyCrushProgram = () => {
 
 
 
+    /**
+     * Refill player energy
+     */
+    const refillEnergy = useCallback(
+        async () => {
+            if (!connected || !publicKey) {
+                throw new Error('Wallet not connected');
+            }
+
+            try {
+                setLoading(true);
+                setError(null);
+
+                console.log('⚡ Refilling energy...');
+                const walletPubKey = new PublicKey(publicKey);
+                const signature = await refillEnergyService(walletPubKey);
+
+                // Refresh profile to show updated energy
+                await fetchPlayerProfile();
+
+                console.log('✅ Energy refilled!');
+                return signature;
+            } catch (err: any) {
+                console.error('Error refilling energy:', err);
+                setError(err.message || 'Failed to refill energy');
+                throw err;
+            } finally {
+                setLoading(false);
+            }
+        },
+        [connected, publicKey, fetchPlayerProfile]
+    );
+
+    const claimSugarRewards = useCallback(
+        async () => {
+            if (!connected || !publicKey) throw new Error('Wallet not connected');
+            try {
+                setLoading(true);
+                setError(null);
+                console.log('🍬 Claiming $SUGAR rewards...');
+                const walletPubKey = new PublicKey(publicKey);
+                const signature = await claimSugarRewardsService(walletPubKey);
+                await fetchPlayerProfile();
+                console.log('✅ $SUGAR rewards claimed!');
+                return signature;
+            } catch (err: any) {
+                setError(err.message || 'Failed to claim rewards');
+                throw err;
+            } finally {
+                setLoading(false);
+            }
+        },
+        [connected, publicKey, fetchPlayerProfile]
+    );
+
     return {
-        // State
         playerProfile,
         loading,
         error,
-
-        // Game functions
         initializePlayer,
         fetchPlayerProfile,
         startGame,
         endGame,
+        refillEnergy,
+        claimSugarRewards,
     };
 };

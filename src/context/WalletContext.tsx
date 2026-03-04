@@ -13,6 +13,7 @@ import {
 import {WalletState, ProfileData} from '../types/walletTypes';
 import {mmkvStorage, STORAGE_KEYS} from '../state/storage';
 import {initializeProgram, initializePlayer, getPlayerProfile} from '../services/solanaService';
+import {useLevelScore} from '../state/useLevelStore';
 
 interface WalletContextType extends WalletState {
   connect: () => Promise<void>;
@@ -94,7 +95,7 @@ export const WalletProvider = ({children}: {children: ReactNode}) => {
             pubKey = new PublicKey(publicKeyString);
           } 
           // Check if it's a Uint8Array or array
-          else if (typeof addressData === 'object' && (addressData instanceof Uint8Array || Array.isArray(addressData))) {
+          else if (typeof addressData === 'object' && ((addressData as any) instanceof Uint8Array || Array.isArray(addressData))) {
             console.log('Detected Uint8Array/Array format');
             pubKey = new PublicKey(addressData);
             publicKeyString = pubKey.toBase58();
@@ -210,11 +211,33 @@ export const WalletProvider = ({children}: {children: ReactNode}) => {
       const playerProfile = await getPlayerProfile(program, pubKey);
 
       if (playerProfile) {
+        // ── Sync unlocked + completed levels from blockchain → useLevelStore ──
+        // Bitmap: bit 0 = level 1 unlocked, bit 1 = level 2 unlocked, etc.
+        // Level N is COMPLETED when level N+1 is unlocked (next level bit is set)
+        const { unlockedLevel, completedLevel } = useLevelScore.getState();
+        for (let levelId = 1; levelId <= 10; levelId++) {
+          const unlockedBit = 1 << (levelId - 1);
+          if ((playerProfile.unlockedLevels & unlockedBit) !== 0) {
+            unlockedLevel(levelId);
+            // The previous level was completed to unlock this one
+            if (levelId > 1) {
+              completedLevel(levelId - 1, 0); // 0 = no local score to restore
+            }
+          }
+        }
+
+        // ── Load locally-stored max high score (real max across levels) ──
+        const savedHighScore = mmkvStorage.getItem(STORAGE_KEYS.HIGH_SCORE);
+        const localHighScore = savedHighScore ? parseInt(savedHighScore, 10) : 0;
+
         const updatedProfile: ProfileData = {
           walletAddress: publicKey,
-          gamesPlayed: playerProfile.totalWins,
-          highScore: playerProfile.levels.reduce((max, level) => Math.max(max, level.highScore), 0),
-          totalTokensEarned: playerProfile.totalTokensEarned,
+          gamesPlayed: playerProfile.totalGames,
+          highScore: localHighScore,               // max score from any single level win
+          totalTokensEarned: playerProfile.totalNftsMinted,
+          energy: playerProfile.energy,
+          highestLevel: playerProfile.highestLevel,
+          totalWins: playerProfile.totalWins,
           customAvatarUri: profileData?.customAvatarUri,
           username: profileData?.username,
         };

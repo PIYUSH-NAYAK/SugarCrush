@@ -1,5 +1,6 @@
 import {View, Text, ImageBackground, Image, FlatList, TouchableOpacity} from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useCallback} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {levelStyles} from '../styles/levelStyles';
 import {commonStyles} from '../styles/commonStyles';
@@ -42,10 +43,20 @@ const LevelScreen = () => {
 
   const {
     startGame,
+    refillEnergy,
     loading,
   } = useCandyCrushProgram();
   
-  const {publicKey} = useWallet();
+  const {publicKey, fetchPlayerProfile} = useWallet();
+
+  // Auto-sync from blockchain every time this screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (publicKey) {
+        fetchPlayerProfile();
+      }
+    }, [publicKey, fetchPlayerProfile]),
+  );
 
   const levelPressHandler = async (id: string) => {
     const levelKey = `level${id}` as keyof GameLevels;
@@ -68,13 +79,43 @@ const LevelScreen = () => {
         },
       });
     } catch (error: any) {
-      console.error('Error setting up game:', error);
-      showAlert(
-        'Setup Failed',
-        error.message || 'Failed to setup game session. Please try again.',
-        undefined,
-        '⚠️',
-      );
+      // Use warn so LogBox doesn't show red overlay — we handle errors with GameAlert
+      console.warn('Game setup failed:', error?.message || error);
+
+      // Detect NotEnoughEnergy from on-chain error
+      const isEnergyError =
+        error?.message?.includes('NotEnoughEnergy') ||
+        error?.message?.includes('0x1778') ||
+        error?.message?.includes('Not enough energy');
+
+      if (isEnergyError) {
+        showAlert(
+          'Out of Energy! ⚡',
+          'You need energy to play. Refill now to keep playing!',
+          [
+            {text: 'Cancel', style: 'cancel'},
+            {
+              text: 'Refill Energy ⚡',
+              onPress: async () => {
+                try {
+                  await refillEnergy();
+                  showAlert('Energy Refilled! ⚡', 'Your energy has been restored. You can play now!', undefined, '✅');
+                } catch (refillError: any) {
+                  showAlert('Refill Failed', refillError.message || 'Failed to refill energy.', undefined, '❌');
+                }
+              },
+            },
+          ],
+          '⚡',
+        );
+      } else {
+        showAlert(
+          'Setup Failed',
+          error.message || 'Failed to setup game session. Please try again.',
+          undefined,
+          '⚠️',
+        );
+      }
     } finally {
       setIsSettingUpGame(false);
     }

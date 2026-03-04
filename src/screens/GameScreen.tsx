@@ -78,12 +78,18 @@ const GameScreen = () => {
 
       console.log(`🏁 Game Over! Victory: ${isVictory}, Score: ${finalScore}`);
 
-      // Update local profile stats
+      // Update local profile stats — track true max high score across all levels
       if (profileData) {
+        const newHighScore = Math.max(profileData.highScore, finalScore);
         updateProfileData({
           gamesPlayed: profileData.gamesPlayed + 1,
-          highScore: Math.max(profileData.highScore, finalScore),
+          highScore: newHighScore,
         });
+        // Persist high score to MMKV so it survives app restarts
+        if (newHighScore > profileData.highScore) {
+          const {mmkvStorage: storage, STORAGE_KEYS} = require('../state/storage');
+          storage.setItem(STORAGE_KEYS.HIGH_SCORE, String(newHighScore));
+        }
       }
 
       // End game on-chain (this also mints tokens if victory)

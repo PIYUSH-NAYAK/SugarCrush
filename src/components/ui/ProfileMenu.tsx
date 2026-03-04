@@ -16,6 +16,7 @@ import {mmkvStorage, STORAGE_KEYS} from '../../state/storage';
 import ProfileAvatar from './ProfileAvatar';
 import {resetAndNavigate} from '../../utils/NavigationUtil';
 import GameAlert from './GameAlert';
+import {useCandyCrushProgram} from '../../hooks/useCandyCrushProgram';
 
 interface ProfileMenuProps {
   visible: boolean;
@@ -24,6 +25,8 @@ interface ProfileMenuProps {
 
 const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
   const {publicKey, disconnect, profileData, updateProfileData, fetchPlayerProfile} = useWallet();
+  const {claimSugarRewards, loading: claimLoading} = useCandyCrushProgram();
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const [alertConfig, setAlertConfig] = useState<{
     visible: boolean;
@@ -158,53 +161,57 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({visible, onClose}) => {
                 Player Stats
               </Text>
               <View style={styles.statsSection}>
-                <View
-                  style={[
-                    styles.statItem,
-                    {
-                      backgroundColor: theme.accentBg,
-                      borderColor: theme.accentBorder,
-                    },
-                  ]}>
-                  <Text style={styles.statValue}>
-                    {profileData.gamesPlayed}
-                  </Text>
-                  <Text style={[styles.statLabel, {color: theme.accentText}]}>
-                    Games Played
-                  </Text>
+                <View style={[styles.statItem, {backgroundColor: theme.accentBg, borderColor: theme.accentBorder}]}>
+                  <Text style={styles.statValue}>{profileData.gamesPlayed}</Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>Games Played</Text>
                 </View>
-                <View
-                  style={[
-                    styles.statItem,
-                    {
-                      backgroundColor: theme.accentBg,
-                      borderColor: theme.accentBorder,
-                    },
-                  ]}>
-                  <Text style={styles.statValue}>
-                    {profileData.highScore}
-                  </Text>
-                  <Text style={[styles.statLabel, {color: theme.accentText}]}>
-                    High Score
-                  </Text>
+                <View style={[styles.statItem, {backgroundColor: theme.accentBg, borderColor: theme.accentBorder}]}>
+                  <Text style={styles.statValue}>{profileData.totalWins ?? 0}</Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>Total Wins</Text>
                 </View>
-                <View
-                  style={[
-                    styles.statItem,
-                    {
-                      backgroundColor: theme.accentBg,
-                      borderColor: theme.accentBorder,
-                    },
-                  ]}>
-                  <Text style={styles.statValue}>
-                    {profileData.totalTokensEarned || 0}
-                  </Text>
-                  <Text style={[styles.statLabel, {color: theme.accentText}]}>
-                    Tokens Minted
-                  </Text>
+                <View style={[styles.statItem, {backgroundColor: theme.accentBg, borderColor: theme.accentBorder}]}>
+                  <Text style={styles.statValue}>Lv {profileData.highestLevel ?? 1}</Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>Highest Level</Text>
+                </View>
+              </View>
+              <View style={[styles.statsSection, {marginTop: 10}]}>
+                <View style={[styles.statItem, {backgroundColor: theme.accentBg, borderColor: theme.accentBorder}]}>
+                  <Text style={styles.statValue}>{profileData.highScore}</Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>Best Score</Text>
+                </View>
+                <View style={[styles.statItem, {backgroundColor: theme.accentBg, borderColor: theme.accentBorder}]}>
+                  <Text style={styles.statValue}>{profileData.energy ?? '?'} ⚡</Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>Energy</Text>
+                </View>
+                <View style={[styles.statItem, {backgroundColor: theme.accentBg, borderColor: theme.accentBorder}]}>
+                  <Text style={styles.statValue}>{profileData.totalTokensEarned ?? 0}</Text>
+                  <Text style={[styles.statLabel, {color: theme.accentText}]}>NFTs Minted</Text>
                 </View>
               </View>
             </View>
+          )}
+
+          {/* Claim $SUGAR Rewards Button */}
+          {profileData && (
+            <TouchableOpacity
+              style={[styles.claimButton, {borderColor: theme.accentBorder, backgroundColor: theme.accentBg}]}
+              onPress={async () => {
+                if (isClaiming) return;
+                setIsClaiming(true);
+                try {
+                  await claimSugarRewards();
+                  showAlert('Rewards Claimed! 🍬', '$SUGAR tokens have been sent to your wallet!', undefined, '✅');
+                } catch (e: any) {
+                  showAlert('Claim Failed', e.message || 'Could not claim rewards.', undefined, '❌');
+                } finally {
+                  setIsClaiming(false);
+                }
+              }}
+              disabled={isClaiming || claimLoading}>
+              <Text style={[styles.claimButtonText, {color: theme.accentText}]}>
+                {isClaiming ? 'Claiming...' : 'Claim $SUGAR Rewards 🍬'}
+              </Text>
+            </TouchableOpacity>
           )}
         </TouchableOpacity>
       </TouchableOpacity>
@@ -339,6 +346,20 @@ const styles = StyleSheet.create({
     marginTop: RFValue(5),
     textAlign: 'center',
     letterSpacing: 0.3,
+  },
+  claimButton: {
+    marginTop: RFValue(18),
+    paddingVertical: RFValue(12),
+    paddingHorizontal: RFValue(16),
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  claimButtonText: {
+    fontFamily: FONTS.Lily,
+    fontSize: RFValue(13),
+    fontWeight: 'bold',
+    letterSpacing: 0.4,
   },
 });
 

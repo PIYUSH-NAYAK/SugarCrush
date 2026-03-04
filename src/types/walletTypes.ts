@@ -11,6 +11,9 @@ export interface ProfileData {
     gamesPlayed: number;
     highScore: number;
     totalTokensEarned?: number;
+    energy?: number;
+    highestLevel?: number;
+    totalWins?: number;
 }
 
 export interface ProfileMenuState {

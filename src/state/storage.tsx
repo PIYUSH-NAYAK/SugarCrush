@@ -33,4 +33,5 @@ export const STORAGE_KEYS = {
   SESSION_KEY: 'session_key',
   SESSION_EXPIRY: 'session_expiry',
   DELEGATION_STATUS: 'delegation_status',
+  HIGH_SCORE: 'high_score',
 };
